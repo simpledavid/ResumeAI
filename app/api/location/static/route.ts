@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { buildTencentMapUrl } from "@/lib/tencent-map-sign";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 const QQ_MAP_BASE_URL = "https://apis.map.qq.com";
@@ -56,18 +56,17 @@ export async function GET(req: NextRequest) {
   if (!key) {
     return NextResponse.json({ error: "未配置腾讯地图 Key（TENCENT_MAP_KEY）" }, { status: 500 });
   }
-  const sk = getTencentMapSk();
 
+  const sk = getTencentMapSk();
   const center = `${lat.toFixed(6)},${lng.toFixed(6)}`;
-  const markers = center;
-  const url = buildTencentMapUrl(
+  const url = await buildTencentMapUrl(
     QQ_MAP_BASE_URL,
     QQ_STATIC_MAP_PATH,
     {
       center,
       key,
       maptype: "roadmap",
-      markers,
+      markers: center,
       size: "640*420",
       zoom: "12",
     },
@@ -80,11 +79,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "静态地图服务不可用" }, { status: 502 });
     }
 
-    const contentType = response.headers.get("content-type") || "application/octet-stream";
+    const contentType =
+      response.headers.get("content-type") || "application/octet-stream";
     if (contentType.includes("application/json")) {
       const data = (await response.json()) as TencentMapError;
       return NextResponse.json(
-        { error: data.message || "腾讯静态地图返回错误，请检查 Key 配置与服务开通状态" },
+        { error: data.message || "腾讯静态地图返回错误，请检查 Key/SK 配置" },
         { status: 502 },
       );
     }
@@ -93,6 +93,7 @@ export async function GET(req: NextRequest) {
     const headers = new Headers();
     headers.set("content-type", contentType);
     headers.set("cache-control", "public, max-age=3600");
+
     return new Response(new Uint8Array(body), {
       status: 200,
       headers,

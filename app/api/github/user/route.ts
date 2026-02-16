@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 type GithubUserResponse = {
@@ -23,7 +23,9 @@ function buildContributionsUrl(username: string) {
 }
 
 export async function GET(req: NextRequest) {
-  const username = (req.nextUrl.searchParams.get("username") || "").trim().replace(/^@/, "");
+  const username = (req.nextUrl.searchParams.get("username") || "")
+    .trim()
+    .replace(/^@/, "");
   if (!username) {
     return NextResponse.json({ error: "请输入 GitHub 用户名" }, { status: 400 });
   }
@@ -40,11 +42,14 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const response = await fetch(`https://api.github.com/users/${encodeURIComponent(username)}`, {
-      method: "GET",
-      cache: "no-store",
-      headers,
-    });
+    const response = await fetch(
+      `https://api.github.com/users/${encodeURIComponent(username)}`,
+      {
+        method: "GET",
+        cache: "no-store",
+        headers,
+      },
+    );
 
     const data = (await response.json()) as GithubUserResponse;
 

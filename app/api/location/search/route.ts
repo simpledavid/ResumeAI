@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { buildTencentMapUrl } from "@/lib/tencent-map-sign";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 const QQ_MAP_BASE_URL = "https://apis.map.qq.com";
@@ -36,7 +36,14 @@ function getTencentMapSk() {
 }
 
 function isValidCoord(lng: number, lat: number) {
-  return Number.isFinite(lng) && Number.isFinite(lat) && lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90;
+  return (
+    Number.isFinite(lng) &&
+    Number.isFinite(lat) &&
+    lng >= -180 &&
+    lng <= 180 &&
+    lat >= -90 &&
+    lat <= 90
+  );
 }
 
 async function fetchWithTimeout(url: string) {
@@ -76,8 +83,9 @@ export async function GET(req: NextRequest) {
   if (!key) {
     return NextResponse.json({ error: "未配置腾讯地图 Key（TENCENT_MAP_KEY）" }, { status: 500 });
   }
+
   const sk = getTencentMapSk();
-  const url = buildTencentMapUrl(
+  const url = await buildTencentMapUrl(
     QQ_MAP_BASE_URL,
     QQ_PLACE_SEARCH_PATH,
     {
@@ -106,13 +114,13 @@ export async function GET(req: NextRequest) {
     }
     if (data.status === 121) {
       return NextResponse.json(
-        { error: "腾讯位置服务当日配额已用完，请在控制台升级配额或明天再试" },
+        { error: "腾讯位置服务当日配额已用完，请稍后再试" },
         { status: 429 },
       );
     }
     if (data.status !== 0) {
       return NextResponse.json(
-        { error: data.message || "腾讯地点搜索失败，请检查 Key、SK 与 WebServiceAPI 配置" },
+        { error: data.message || "腾讯地点搜索失败，请检查 Key/SK 配置" },
         { status: 502 },
       );
     }
@@ -135,7 +143,9 @@ export async function GET(req: NextRequest) {
       `/api/location/static?lng=${lng.toFixed(6)}` +
       `&lat=${lat.toFixed(6)}` +
       `&name=${encodeURIComponent(shortName)}`;
-    const mapLink = `https://map.qq.com/?marker=coord:${lat.toFixed(6)},${lng.toFixed(6)};title:${encodeURIComponent(displayName)}`;
+    const mapLink =
+      `https://map.qq.com/?marker=coord:${lat.toFixed(6)},${lng.toFixed(6)};` +
+      `title:${encodeURIComponent(displayName)}`;
 
     return NextResponse.json({
       shortName,
