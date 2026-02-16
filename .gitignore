@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/app/generated/prisma
+
+# local tooling/runtime files
+.dev.vars
+.wrangler/
+.claude/
+.codex_vercel_build.log
+.sp_test.log
+prisma/dev.db
