@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 type TemplateId = "modern" | "classic" | "minimal";
 
@@ -50,26 +52,26 @@ type TemplateMeta = {
   description: string;
 };
 
-const STORAGE_KEY = "resumeai.resume.editor.v1";
+const STORAGE_KEY = "resumeai.resume.editor.v2";
 
-const TEMPLATE_LIST: TemplateMeta[] = [
+const TEMPLATES: TemplateMeta[] = [
   {
     id: "modern",
     name: "现代商务",
-    subtitle: "双栏结构",
-    description: "适合互联网和技术岗位，突出结果与技能。",
+    subtitle: "双栏结果导向",
+    description: "适合互联网和技术岗位，突出技能与成果。",
   },
   {
     id: "classic",
     name: "经典专业",
-    subtitle: "传统结构",
-    description: "适合校招与常规社招，信息清晰稳健。",
+    subtitle: "传统招聘风格",
+    description: "适合校招和通用社招，结构清晰稳健。",
   },
   {
     id: "minimal",
     name: "极简作品",
-    subtitle: "简洁叙事",
-    description: "适合设计和创意岗位，强调项目表达。",
+    subtitle: "简洁叙事表达",
+    description: "适合设计、内容、创意岗位的项目展示。",
   },
 ];
 
@@ -78,37 +80,37 @@ const PRESETS: Record<TemplateId, ResumeData> = {
     fullName: "李明",
     headline: "高级前端工程师 | React / Next.js / AI",
     summary:
-      "5 年 Web 开发经验，主导过企业级中后台与 AI 应用落地。擅长通过性能优化和体验设计提升转化指标。",
+      "5 年 Web 开发经验，主导过中后台与 AI 应用落地。擅长通过性能优化和用户体验改进提升关键业务指标。",
     email: "liming@example.com",
     phone: "138-8888-8888",
     location: "上海",
     website: "github.com/octocat",
-    skills: ["TypeScript", "React", "Next.js", "Node.js", "Tailwind CSS", "A/B 测试"],
+    skills: ["TypeScript", "React", "Next.js", "Node.js", "Tailwind CSS", "A/B Test"],
     experiences: [
       {
-        id: "m-e-1",
+        id: "m-exp-1",
         role: "高级前端工程师",
         company: "某 AI SaaS 公司",
         period: "2022.03 - 至今",
-        highlights: "负责简历产品前端架构，首屏性能提升 43%，注册转化提升 22%。",
+        highlights: "负责简历产品前端架构，首屏性能提升 43%，注册转化率提升 22%。",
       },
     ],
     educations: [
       {
-        id: "m-ed-1",
+        id: "m-edu-1",
         school: "华东理工大学",
         major: "软件工程 本科",
         period: "2016 - 2020",
-        details: "主修软件工程、数据库与算法。",
+        details: "主修软件工程、数据库系统与算法。",
       },
     ],
     projects: [
       {
-        id: "m-p-1",
-        name: "ResumeAI 简历平台",
+        id: "m-pro-1",
+        name: "ResumeAI",
         role: "前端负责人",
         link: "resumeai-dja.pages.dev",
-        description: "实现模板化编辑与 Cloudflare Pages 自动部署。",
+        description: "实现模板化编辑、认证体系和 Cloudflare 自动部署。",
       },
     ],
   },
@@ -123,53 +125,53 @@ const PRESETS: Record<TemplateId, ResumeData> = {
     skills: ["需求分析", "PRD", "用户研究", "数据分析", "项目管理"],
     experiences: [
       {
-        id: "c-e-1",
+        id: "c-exp-1",
         role: "高级产品经理",
         company: "某企业服务公司",
         period: "2021.05 - 至今",
-        highlights: "主导客户管理模块重构，续费率提升 15%。",
+        highlights: "主导客户管理模块重构，客户续费率提升 15%。",
       },
     ],
     educations: [
       {
-        id: "c-ed-1",
+        id: "c-edu-1",
         school: "南京大学",
         major: "信息管理与信息系统 本科",
         period: "2015 - 2019",
-        details: "连续两年奖学金，担任项目负责人。",
+        details: "连续两年获奖学金，担任校级项目负责人。",
       },
     ],
     projects: [
       {
-        id: "c-p-1",
+        id: "c-pro-1",
         name: "客户成功平台升级",
         role: "项目负责人",
         link: "",
-        description: "重构任务流与运营看板，提升协同效率。",
+        description: "重构任务流与运营看板，提升跨部门协同效率。",
       },
     ],
   },
   minimal: {
     fullName: "王悦",
     headline: "视觉设计师 | 品牌与数字体验",
-    summary: "专注品牌视觉系统与数字产品设计，平衡审美表达和业务目标。",
+    summary: "专注品牌视觉系统与数字产品设计，平衡审美表达和商业目标。",
     email: "wangyue@example.com",
     phone: "137-7777-7777",
     location: "深圳",
     website: "dribbble.com",
-    skills: ["Figma", "品牌设计", "UI 设计", "动效设计", "设计系统"],
+    skills: ["Figma", "品牌设计", "UI 设计", "设计系统", "动效设计"],
     experiences: [
       {
-        id: "n-e-1",
+        id: "n-exp-1",
         role: "视觉设计师",
         company: "某消费品牌",
         period: "2021.09 - 至今",
-        highlights: "建立官网设计规范，官网停留时长提升 26%。",
+        highlights: "建立官网视觉规范，官网停留时长提升 26%。",
       },
     ],
     educations: [
       {
-        id: "n-ed-1",
+        id: "n-edu-1",
         school: "广州美术学院",
         major: "视觉传达设计 本科",
         period: "2017 - 2021",
@@ -178,68 +180,86 @@ const PRESETS: Record<TemplateId, ResumeData> = {
     ],
     projects: [
       {
-        id: "n-p-1",
+        id: "n-pro-1",
         name: "品牌官网改版",
         role: "主设计",
         link: "",
-        description: "完成信息架构重组和视觉升级。",
+        description: "完成信息架构重组和视觉升级，形成可复用设计资产。",
       },
     ],
   },
 };
 
-const inputClass =
-  "h-9 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-slate-100 outline-none";
-const areaClass =
-  "w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none";
-
-function cloneResume(data: ResumeData): ResumeData {
-  return JSON.parse(JSON.stringify(data)) as ResumeData;
+function deepCopy<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function newId() {
+function makeId() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function ensureUrl(url: string) {
-  const v = url.trim();
-  if (!v) return "";
-  if (v.startsWith("http://") || v.startsWith("https://")) return v;
-  return `https://${v}`;
-}
-
-function toSkills(text: string) {
+function normalizeSkills(raw: string) {
   return Array.from(
     new Set(
-      text
+      raw
         .split(/[,\n，、]/)
-        .map((x) => x.trim())
+        .map((item) => item.trim())
         .filter(Boolean),
     ),
   );
 }
 
+function normalizeUrl(url: string) {
+  const value = url.trim();
+  if (!value) return "";
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  return `https://${value}`;
+}
+
+function Label({ children }: { children: string }) {
+  return <p className="mb-1 text-xs font-medium text-slate-300">{children}</p>;
+}
+
+function Section({
+  title,
+  children,
+  action,
+}: {
+  title: string;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <Card className="border-white/10 bg-white/[0.03] shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+        <CardTitle className="text-sm text-[#d7c6a4]">{title}</CardTitle>
+        {action}
+      </CardHeader>
+      <CardContent className="space-y-2">{children}</CardContent>
+    </Card>
+  );
+}
+
 function Preview({ template, resume }: { template: TemplateId; resume: ResumeData }) {
-  const website = ensureUrl(resume.website);
   if (template === "modern") {
     return (
-      <article className="mx-auto w-full max-w-[900px] overflow-hidden rounded-2xl bg-white text-slate-800 shadow-[0_20px_60px_rgba(8,14,28,0.16)]">
-        <div className="grid md:grid-cols-[250px_1fr]">
-          <aside className="bg-gradient-to-b from-[#1d355b] to-[#11203a] p-6 text-slate-100">
+      <article className="mx-auto w-full max-w-[860px] overflow-hidden rounded-2xl bg-white text-slate-800 shadow-[0_24px_70px_rgba(10,20,35,0.18)]">
+        <div className="grid md:grid-cols-[240px_1fr]">
+          <aside className="bg-gradient-to-b from-[#22406f] to-[#142846] p-6 text-slate-100">
             <h1 className="text-3xl font-extrabold">{resume.fullName || "你的姓名"}</h1>
             <p className="mt-2 text-sm text-slate-200">{resume.headline || "职位标题"}</p>
-            <p className="mt-6 text-sm">{resume.email}</p>
+            <p className="mt-5 text-sm">{resume.email}</p>
             <p className="text-sm">{resume.phone}</p>
             <p className="text-sm">{resume.location}</p>
-            {website ? (
-              <a href={website} target="_blank" rel="noreferrer" className="text-sm underline">
+            {resume.website ? (
+              <a href={normalizeUrl(resume.website)} target="_blank" rel="noreferrer" className="text-sm underline">
                 {resume.website}
               </a>
             ) : null}
-            <h3 className="mt-8 text-xs font-bold tracking-[0.2em] uppercase">Skills</h3>
+            <p className="mt-6 text-xs font-semibold tracking-[0.18em] uppercase">Skills</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {resume.skills.map((skill) => (
                 <span key={skill} className="rounded-full bg-white/10 px-2.5 py-1 text-xs">
@@ -248,24 +268,26 @@ function Preview({ template, resume }: { template: TemplateId; resume: ResumeDat
               ))}
             </div>
           </aside>
-          <main className="space-y-6 p-6">
+          <div className="space-y-6 p-6">
             <section>
-              <h3 className="text-xs font-bold tracking-[0.2em] text-slate-500 uppercase">Summary</h3>
+              <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Summary</p>
               <p className="mt-2 text-sm leading-7">{resume.summary}</p>
             </section>
             <section>
-              <h3 className="text-xs font-bold tracking-[0.2em] text-slate-500 uppercase">Experience</h3>
+              <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Experience</p>
               <div className="mt-3 space-y-4">
                 {resume.experiences.map((item) => (
                   <div key={item.id}>
-                    <p className="font-semibold">{item.role} · {item.company}</p>
+                    <p className="font-semibold">
+                      {item.role || "职位"} · {item.company || "公司"}
+                    </p>
                     <p className="text-xs text-slate-500">{item.period}</p>
                     <p className="mt-1 text-sm leading-7">{item.highlights}</p>
                   </div>
                 ))}
               </div>
             </section>
-          </main>
+          </div>
         </div>
       </article>
     );
@@ -273,24 +295,28 @@ function Preview({ template, resume }: { template: TemplateId; resume: ResumeDat
 
   if (template === "classic") {
     return (
-      <article className="mx-auto w-full max-w-[900px] rounded-2xl bg-white p-8 text-slate-800 shadow-[0_20px_60px_rgba(8,14,28,0.16)]">
+      <article className="mx-auto w-full max-w-[860px] rounded-2xl bg-white p-8 text-slate-800 shadow-[0_24px_70px_rgba(10,20,35,0.18)]">
         <header className="border-b border-slate-200 pb-4 text-center">
           <h1 className="text-4xl font-bold">{resume.fullName || "你的姓名"}</h1>
           <p className="mt-2 text-sm">{resume.headline || "职位标题"}</p>
-          <p className="mt-2 text-xs text-slate-500">{[resume.email, resume.phone, resume.location].filter(Boolean).join(" | ")}</p>
+          <p className="mt-2 text-xs text-slate-500">
+            {[resume.email, resume.phone, resume.location].filter(Boolean).join(" | ")}
+          </p>
         </header>
         <section className="mt-6">
-          <h3 className="border-b border-slate-200 pb-1 text-xs font-bold tracking-[0.2em] uppercase">个人简介</h3>
+          <p className="border-b border-slate-200 pb-1 text-xs font-semibold tracking-[0.16em] uppercase">个人简介</p>
           <p className="mt-2 text-sm leading-7">{resume.summary}</p>
         </section>
         <section className="mt-6">
-          <h3 className="border-b border-slate-200 pb-1 text-xs font-bold tracking-[0.2em] uppercase">工作经历</h3>
+          <p className="border-b border-slate-200 pb-1 text-xs font-semibold tracking-[0.16em] uppercase">工作经历</p>
           <div className="mt-3 space-y-3">
             {resume.experiences.map((item) => (
               <div key={item.id}>
-                <p className="font-semibold">{item.company} · {item.role}</p>
+                <p className="font-semibold">
+                  {item.company || "公司"} · {item.role || "职位"}
+                </p>
                 <p className="text-xs text-slate-500">{item.period}</p>
-                <p className="mt-1 text-sm">{item.highlights}</p>
+                <p className="mt-1 text-sm leading-7">{item.highlights}</p>
               </div>
             ))}
           </div>
@@ -300,17 +326,19 @@ function Preview({ template, resume }: { template: TemplateId; resume: ResumeDat
   }
 
   return (
-    <article className="mx-auto w-full max-w-[900px] rounded-2xl bg-white p-8 text-slate-900 shadow-[0_20px_60px_rgba(8,14,28,0.16)]">
+    <article className="mx-auto w-full max-w-[860px] rounded-2xl bg-white p-8 text-slate-900 shadow-[0_24px_70px_rgba(10,20,35,0.18)]">
       <header className="border-l-4 border-slate-900 pl-4">
         <h1 className="text-4xl font-bold">{resume.fullName || "你的姓名"}</h1>
         <p className="mt-2">{resume.headline || "职位标题"}</p>
       </header>
       <p className="mt-6 text-sm leading-7">{resume.summary}</p>
-      <h3 className="mt-6 text-xs font-bold tracking-[0.2em] text-slate-500 uppercase">Projects</h3>
+      <p className="mt-6 text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">Projects</p>
       <div className="mt-2 space-y-3">
         {resume.projects.map((item) => (
           <div key={item.id}>
-            <p className="font-semibold">{item.name} · {item.role}</p>
+            <p className="font-semibold">
+              {item.name || "项目"} · {item.role || "角色"}
+            </p>
             <p className="text-sm text-slate-700">{item.description}</p>
           </div>
         ))}
@@ -319,19 +347,10 @@ function Preview({ template, resume }: { template: TemplateId; resume: ResumeDat
   );
 }
 
-function SectionBlock({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-      <p className="mb-2 text-sm font-semibold text-[#d7c6a4]">{title}</p>
-      {children}
-    </div>
-  );
-}
-
 export default function DashboardEditor() {
   const [template, setTemplate] = useState<TemplateId>("modern");
-  const [resume, setResume] = useState<ResumeData>(() => cloneResume(PRESETS.modern));
-  const [skillsInput, setSkillsInput] = useState(PRESETS.modern.skills.join("，"));
+  const [resume, setResume] = useState<ResumeData>(() => deepCopy(PRESETS.modern));
+  const [skillsText, setSkillsText] = useState(PRESETS.modern.skills.join("，"));
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -339,10 +358,12 @@ export default function DashboardEditor() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as { template?: TemplateId; resume?: ResumeData };
-        if (parsed.template && PRESETS[parsed.template]) setTemplate(parsed.template);
+        if (parsed.template && PRESETS[parsed.template]) {
+          setTemplate(parsed.template);
+        }
         if (parsed.resume) {
           setResume(parsed.resume);
-          setSkillsInput((parsed.resume.skills || []).join("，"));
+          setSkillsText((parsed.resume.skills || []).join("，"));
         }
       }
     } finally {
@@ -353,130 +374,206 @@ export default function DashboardEditor() {
   useEffect(() => {
     if (!ready) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ template, resume }));
-  }, [ready, template, resume]);
+  }, [ready, resume, template]);
 
   function applyTemplate(id: TemplateId) {
-    const data = cloneResume(PRESETS[id]);
+    const data = deepCopy(PRESETS[id]);
     setTemplate(id);
     setResume(data);
-    setSkillsInput(data.skills.join("，"));
+    setSkillsText(data.skills.join("，"));
   }
 
-  return (
-    <section className="min-h-[980px] rounded-[28px] border border-white/5 bg-black/10 p-4 md:p-5">
-      <SectionBlock title="简历模板">
-        <div className="mb-3 flex flex-wrap gap-2">
-          {TEMPLATE_LIST.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => applyTemplate(item.id)}
-              className={`rounded-xl border px-3 py-2 text-left ${
-                template === item.id ? "border-[#4dbf7f] bg-[#1f3a2f]/70" : "border-white/10 bg-white/[0.02]"
-              }`}
-            >
-              <p className="text-sm font-semibold text-slate-100">{item.name}</p>
-              <p className="text-xs text-slate-400">{item.subtitle}</p>
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="rounded-xl bg-[#329a60] px-3 py-2 text-sm font-semibold text-[#d5f3e4]"
-          >
-            打印 / PDF
-          </button>
-        </div>
-        <p className="text-xs text-slate-400">{TEMPLATE_LIST.find((x) => x.id === template)?.description}</p>
-      </SectionBlock>
+  const templateDescription = useMemo(
+    () => TEMPLATES.find((item) => item.id === template)?.description ?? "",
+    [template],
+  );
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-[420px_1fr]">
-        <div className="space-y-4 xl:max-h-[840px] xl:overflow-y-auto xl:pr-2">
-          <SectionBlock title="基础信息">
-            <input
+  return (
+    <section className="min-h-[940px] rounded-[26px] border border-white/10 bg-black/20 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.25)] md:p-5">
+      <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_500px]">
+        <div className="space-y-4">
+          <Section title="基础信息">
+            <Label>姓名</Label>
+            <Input
               value={resume.fullName}
-              onChange={(e) => setResume((p) => ({ ...p, fullName: e.target.value }))}
-              className={inputClass}
-              placeholder="姓名"
+              onChange={(e) => setResume((prev) => ({ ...prev, fullName: e.target.value }))}
+              className="border-white/10 bg-white/[0.03] text-slate-100"
             />
-            <input
+            <Label>职位标题</Label>
+            <Input
               value={resume.headline}
-              onChange={(e) => setResume((p) => ({ ...p, headline: e.target.value }))}
-              className={`${inputClass} mt-2`}
-              placeholder="职位标题"
+              onChange={(e) => setResume((prev) => ({ ...prev, headline: e.target.value }))}
+              className="border-white/10 bg-white/[0.03] text-slate-100"
             />
+            <Label>个人简介</Label>
             <textarea
               value={resume.summary}
-              onChange={(e) => setResume((p) => ({ ...p, summary: e.target.value }))}
-              className={`${areaClass} mt-2 h-20`}
-              placeholder="个人简介"
+              onChange={(e) => setResume((prev) => ({ ...prev, summary: e.target.value }))}
+              className="h-24 w-full resize-none rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none"
             />
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <input value={resume.email} onChange={(e) => setResume((p) => ({ ...p, email: e.target.value }))} className={inputClass} placeholder="邮箱" />
-              <input value={resume.phone} onChange={(e) => setResume((p) => ({ ...p, phone: e.target.value }))} className={inputClass} placeholder="电话" />
+            <div className="grid gap-2 md:grid-cols-2">
+              <Input
+                value={resume.email}
+                onChange={(e) => setResume((prev) => ({ ...prev, email: e.target.value }))}
+                className="border-white/10 bg-white/[0.03] text-slate-100"
+                placeholder="邮箱"
+              />
+              <Input
+                value={resume.phone}
+                onChange={(e) => setResume((prev) => ({ ...prev, phone: e.target.value }))}
+                className="border-white/10 bg-white/[0.03] text-slate-100"
+                placeholder="电话"
+              />
             </div>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <input value={resume.location} onChange={(e) => setResume((p) => ({ ...p, location: e.target.value }))} className={inputClass} placeholder="城市" />
-              <input value={resume.website} onChange={(e) => setResume((p) => ({ ...p, website: e.target.value }))} className={inputClass} placeholder="网站/链接" />
+            <div className="grid gap-2 md:grid-cols-2">
+              <Input
+                value={resume.location}
+                onChange={(e) => setResume((prev) => ({ ...prev, location: e.target.value }))}
+                className="border-white/10 bg-white/[0.03] text-slate-100"
+                placeholder="城市"
+              />
+              <Input
+                value={resume.website}
+                onChange={(e) => setResume((prev) => ({ ...prev, website: e.target.value }))}
+                className="border-white/10 bg-white/[0.03] text-slate-100"
+                placeholder="网站/链接"
+              />
             </div>
-          </SectionBlock>
+          </Section>
 
-          <SectionBlock title="技能（逗号分隔）">
+          <Section title="技能（逗号分隔）">
             <textarea
-              value={skillsInput}
-              onChange={(e) => setSkillsInput(e.target.value)}
-              onBlur={() => setResume((p) => ({ ...p, skills: toSkills(skillsInput) }))}
-              className={`${areaClass} h-16`}
+              value={skillsText}
+              onChange={(e) => setSkillsText(e.target.value)}
+              onBlur={() => setResume((prev) => ({ ...prev, skills: normalizeSkills(skillsText) }))}
+              className="h-16 w-full resize-none rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none"
             />
-          </SectionBlock>
+          </Section>
 
-          <SectionBlock title="工作经历">
+          <Section
+            title="工作经历"
+            action={
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-white/20 bg-transparent text-slate-200 hover:bg-white/10"
+                onClick={() =>
+                  setResume((prev) => ({
+                    ...prev,
+                    experiences: [
+                      ...prev.experiences,
+                      { id: makeId(), role: "新职位", company: "新公司", period: "时间段", highlights: "请填写成果" },
+                    ],
+                  }))
+                }
+              >
+                添加
+              </Button>
+            }
+          >
             {resume.experiences.map((item) => (
-              <div key={item.id} className="mb-3 rounded-xl border border-white/10 bg-black/10 p-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <input value={item.role} onChange={(e) => setResume((p) => ({ ...p, experiences: p.experiences.map((x) => x.id === item.id ? { ...x, role: e.target.value } : x) }))} className={inputClass} placeholder="职位" />
-                  <input value={item.company} onChange={(e) => setResume((p) => ({ ...p, experiences: p.experiences.map((x) => x.id === item.id ? { ...x, company: e.target.value } : x) }))} className={inputClass} placeholder="公司" />
+              <div key={item.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
+                <div className="grid gap-2 md:grid-cols-2">
+                  <Input
+                    value={item.role}
+                    onChange={(e) =>
+                      setResume((prev) => ({
+                        ...prev,
+                        experiences: prev.experiences.map((x) =>
+                          x.id === item.id ? { ...x, role: e.target.value } : x,
+                        ),
+                      }))
+                    }
+                    className="border-white/10 bg-white/[0.03] text-slate-100"
+                    placeholder="职位"
+                  />
+                  <Input
+                    value={item.company}
+                    onChange={(e) =>
+                      setResume((prev) => ({
+                        ...prev,
+                        experiences: prev.experiences.map((x) =>
+                          x.id === item.id ? { ...x, company: e.target.value } : x,
+                        ),
+                      }))
+                    }
+                    className="border-white/10 bg-white/[0.03] text-slate-100"
+                    placeholder="公司"
+                  />
                 </div>
-                <input value={item.period} onChange={(e) => setResume((p) => ({ ...p, experiences: p.experiences.map((x) => x.id === item.id ? { ...x, period: e.target.value } : x) }))} className={`${inputClass} mt-2`} placeholder="时间" />
-                <textarea value={item.highlights} onChange={(e) => setResume((p) => ({ ...p, experiences: p.experiences.map((x) => x.id === item.id ? { ...x, highlights: e.target.value } : x) }))} className={`${areaClass} mt-2 h-16`} placeholder="成果" />
+                <Input
+                  value={item.period}
+                  onChange={(e) =>
+                    setResume((prev) => ({
+                      ...prev,
+                      experiences: prev.experiences.map((x) =>
+                        x.id === item.id ? { ...x, period: e.target.value } : x,
+                      ),
+                    }))
+                  }
+                  className="mt-2 border-white/10 bg-white/[0.03] text-slate-100"
+                  placeholder="时间段"
+                />
+                <textarea
+                  value={item.highlights}
+                  onChange={(e) =>
+                    setResume((prev) => ({
+                      ...prev,
+                      experiences: prev.experiences.map((x) =>
+                        x.id === item.id ? { ...x, highlights: e.target.value } : x,
+                      ),
+                    }))
+                  }
+                  className="mt-2 h-16 w-full resize-none rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none"
+                />
               </div>
             ))}
-            <button type="button" onClick={() => setResume((p) => ({ ...p, experiences: [...p.experiences, { id: newId(), role: "新职位", company: "新公司", period: "时间段", highlights: "请填写成果" }] }))} className="rounded-lg border border-white/15 px-3 py-1 text-xs text-slate-300">添加经历</button>
-          </SectionBlock>
-
-          <SectionBlock title="教育背景">
-            {resume.educations.map((item) => (
-              <div key={item.id} className="mb-3 rounded-xl border border-white/10 bg-black/10 p-3">
-                <input value={item.school} onChange={(e) => setResume((p) => ({ ...p, educations: p.educations.map((x) => x.id === item.id ? { ...x, school: e.target.value } : x) }))} className={inputClass} placeholder="学校" />
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <input value={item.major} onChange={(e) => setResume((p) => ({ ...p, educations: p.educations.map((x) => x.id === item.id ? { ...x, major: e.target.value } : x) }))} className={inputClass} placeholder="专业" />
-                  <input value={item.period} onChange={(e) => setResume((p) => ({ ...p, educations: p.educations.map((x) => x.id === item.id ? { ...x, period: e.target.value } : x) }))} className={inputClass} placeholder="时间" />
-                </div>
-              </div>
-            ))}
-            <button type="button" onClick={() => setResume((p) => ({ ...p, educations: [...p.educations, { id: newId(), school: "学校", major: "专业", period: "时间", details: "" }] }))} className="rounded-lg border border-white/15 px-3 py-1 text-xs text-slate-300">添加教育</button>
-          </SectionBlock>
-
-          <SectionBlock title="项目经历">
-            {resume.projects.map((item) => (
-              <div key={item.id} className="mb-3 rounded-xl border border-white/10 bg-black/10 p-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <input value={item.name} onChange={(e) => setResume((p) => ({ ...p, projects: p.projects.map((x) => x.id === item.id ? { ...x, name: e.target.value } : x) }))} className={inputClass} placeholder="项目名称" />
-                  <input value={item.role} onChange={(e) => setResume((p) => ({ ...p, projects: p.projects.map((x) => x.id === item.id ? { ...x, role: e.target.value } : x) }))} className={inputClass} placeholder="角色" />
-                </div>
-                <input value={item.link} onChange={(e) => setResume((p) => ({ ...p, projects: p.projects.map((x) => x.id === item.id ? { ...x, link: e.target.value } : x) }))} className={`${inputClass} mt-2`} placeholder="链接" />
-                <textarea value={item.description} onChange={(e) => setResume((p) => ({ ...p, projects: p.projects.map((x) => x.id === item.id ? { ...x, description: e.target.value } : x) }))} className={`${areaClass} mt-2 h-16`} placeholder="描述" />
-              </div>
-            ))}
-            <button type="button" onClick={() => setResume((p) => ({ ...p, projects: [...p.projects, { id: newId(), name: "项目", role: "角色", link: "", description: "项目描述" }] }))} className="rounded-lg border border-white/15 px-3 py-1 text-xs text-slate-300">添加项目</button>
-          </SectionBlock>
+          </Section>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-3 md:p-4">
-          <p className="mb-2 text-sm font-semibold text-slate-100">简历预览（{TEMPLATE_LIST.find((x) => x.id === template)?.name}）</p>
-          <div className="max-h-[840px] overflow-auto rounded-xl bg-[#dbe4f1] p-3">
-            <Preview template={template} resume={resume} />
-          </div>
+        <div className="space-y-4">
+          <Card className="border-white/10 bg-white/[0.03] shadow-[0_14px_32px_rgba(0,0,0,0.26)]">
+            <CardHeader>
+              <CardTitle className="text-base text-slate-100">模板选择</CardTitle>
+              <CardDescription className="text-slate-400">{templateDescription}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {TEMPLATES.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => applyTemplate(item.id)}
+                  className={`w-full rounded-lg border px-3 py-2 text-left transition ${
+                    template === item.id
+                      ? "border-[#4dbf7f] bg-[#1f3a2f]/70"
+                      : "border-white/15 bg-white/[0.02] hover:bg-white/[0.08]"
+                  }`}
+                >
+                  <p className="text-sm font-semibold text-slate-100">{item.name}</p>
+                  <p className="text-xs text-slate-400">{item.subtitle}</p>
+                </button>
+              ))}
+
+              <Button
+                className="mt-2 w-full bg-[#329a60] text-[#d5f3e4] hover:bg-[#3da96e]"
+                onClick={() => window.print()}
+              >
+                导出 PDF
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-white/10 bg-white/[0.03] shadow-[0_14px_32px_rgba(0,0,0,0.26)]">
+            <CardHeader>
+              <CardTitle className="text-base text-slate-100">模板预览</CardTitle>
+              <CardDescription className="text-slate-400">右侧固定展示，方便对照编辑</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-[760px] overflow-auto rounded-xl bg-[#dbe4f1] p-3">
+                <Preview template={template} resume={resume} />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </section>
