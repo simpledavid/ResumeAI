@@ -15,8 +15,8 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "Personal Hub Landing",
-  description: "Built with Next.js and Tailwind CSS",
+  title: "ResumeAI - AI 简历编辑器",
+  description: "模板化简历编辑、实时预览与 PDF 导出",
 };
 
 export default function RootLayout({

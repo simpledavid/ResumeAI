@@ -62,6 +62,10 @@ export default function DashboardSidebar({
     router.refresh();
   }
 
+  function onPrintResume() {
+    window.print();
+  }
+
   return (
     <aside className="border-b border-white/10 pb-5 md:flex md:min-h-[860px] md:flex-col md:border-r md:border-b-0 md:pb-0 md:pr-6">
       <div className="mb-6 flex items-start justify-between md:mb-7 md:pt-3">
@@ -101,10 +105,14 @@ export default function DashboardSidebar({
         />
 
         <div className="pt-3 md:pt-4">
-          <button className="inline-flex h-10 items-center rounded-full bg-[#329a60] px-5 text-base font-bold text-[#d5f3e4] shadow-[0_8px_20px_rgba(0,0,0,0.28)] md:h-[38px] md:px-5 md:text-[16px]">
-            分享
+          <button
+            type="button"
+            onClick={onPrintResume}
+            className="inline-flex h-10 items-center rounded-full bg-[#329a60] px-5 text-base font-bold text-[#d5f3e4] shadow-[0_8px_20px_rgba(0,0,0,0.28)] md:h-[38px] md:px-5 md:text-[16px]"
+          >
+            导出 PDF
           </button>
-          <p className="mt-2 text-lg text-zinc-300 md:text-[16px]">预览视图</p>
+          <p className="mt-2 text-lg text-zinc-300 md:text-[16px]">简历预览</p>
         </div>
       </div>
 
@@ -117,13 +125,13 @@ export default function DashboardSidebar({
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           className="h-14 w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[15px] text-[#d8c49b] outline-none md:h-16 md:text-[16px]"
-          placeholder="设置简介..."
+          placeholder="一句话职业标签..."
         />
       </div>
 
       <div className="mt-8 grid grid-cols-2 gap-3 text-base font-medium text-[#d7c6a4] md:mt-auto md:mb-1 md:grid-cols-2 md:gap-2 md:text-[13px]">
-        <p className="truncate">• 我的账号</p>
-        <p className="truncate">◖ 我的数据</p>
+        <p className="truncate">• 模板中心</p>
+        <p className="truncate">◖ 简历设置</p>
       </div>
       <div className="grid grid-cols-2 gap-3 text-base font-medium text-[#d7c6a4] md:mb-2 md:grid-cols-2 md:gap-2 md:text-[13px]">
         <button
@@ -133,7 +141,7 @@ export default function DashboardSidebar({
         >
           退出登录
         </button>
-        <p className="truncate border-l border-white/15 pl-3">帮助和建议</p>
+        <p className="truncate border-l border-white/15 pl-3">求职建议</p>
       </div>
     </aside>
   );
