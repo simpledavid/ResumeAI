@@ -1,4 +1,5 @@
 ﻿import { NextResponse } from "next/server";
+import { readRuntimeEnv } from "@/lib/runtime-env";
 
 export const runtime = "edge";
 
@@ -20,7 +21,7 @@ function extractHost(raw: string | undefined) {
 
 function isAllowedHost(host: string) {
   const allowSet = new Set(
-    [extractHost(process.env.COS_DOMAIN), extractHost(process.env.QINIU_DOMAIN)].filter(Boolean),
+    [extractHost(readRuntimeEnv("COS_DOMAIN")), extractHost(readRuntimeEnv("QINIU_DOMAIN"))].filter(Boolean),
   );
   if (allowSet.has(host)) {
     return true;
@@ -42,10 +43,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "invalid src" }, { status: 400 });
   }
 
-  if (![
-    "http:",
-    "https:",
-  ].includes(parsed.protocol)) {
+  if (!["http:", "https:"].includes(parsed.protocol)) {
     return NextResponse.json({ error: "invalid protocol" }, { status: 400 });
   }
 

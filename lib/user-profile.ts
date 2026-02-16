@@ -1,4 +1,5 @@
 import type { D1Database } from "@cloudflare/workers-types";
+import { readRuntimeEnv } from "@/lib/runtime-env";
 
 export type UserProfileRow = {
   id: string;
@@ -21,11 +22,12 @@ function normalizeAvatarUrlForDisplay(url: string | null) {
   })();
 
   // qiniu was disabled in current deployment; hide legacy avatar and let user re-upload to COS.
-  if (isLegacyQiniu && !process.env.QINIU_DOMAIN) {
+  const qiniuDomain = readRuntimeEnv("QINIU_DOMAIN");
+  if (isLegacyQiniu && !qiniuDomain) {
     return null;
   }
 
-  const domain = process.env.COS_DOMAIN || process.env.QINIU_DOMAIN;
+  const domain = readRuntimeEnv("COS_DOMAIN") || qiniuDomain;
   if (!domain || !domain.trim()) {
     return url;
   }

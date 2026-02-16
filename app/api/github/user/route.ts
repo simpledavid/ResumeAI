@@ -1,4 +1,5 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
+import { readRuntimeEnv } from "@/lib/runtime-env";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -37,8 +38,10 @@ export async function GET(req: NextRequest) {
     Accept: "application/vnd.github+json",
     "User-Agent": "Resumio",
   };
-  if (process.env.GITHUB_TOKEN) {
-    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+
+  const githubToken = readRuntimeEnv("GITHUB_TOKEN");
+  if (githubToken) {
+    headers.Authorization = `Bearer ${githubToken}`;
   }
 
   try {

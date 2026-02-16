@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { buildTencentMapUrl } from "@/lib/tencent-map-sign";
+import { readRuntimeEnv } from "@/lib/runtime-env";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -14,11 +15,11 @@ type TencentMapError = {
 };
 
 function getTencentMapKey() {
-  return process.env.TENCENT_MAP_KEY || process.env.QQ_MAP_KEY || "";
+  return readRuntimeEnv("TENCENT_MAP_KEY") || readRuntimeEnv("QQ_MAP_KEY") || "";
 }
 
 function getTencentMapSk() {
-  return process.env.TENCENT_MAP_SK || process.env.QQ_MAP_SK || "";
+  return readRuntimeEnv("TENCENT_MAP_SK") || readRuntimeEnv("QQ_MAP_SK") || "";
 }
 
 function toNumber(raw: string | null) {
