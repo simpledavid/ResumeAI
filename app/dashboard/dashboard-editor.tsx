@@ -1,6 +1,8 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -52,7 +54,12 @@ type TemplateMeta = {
   description: string;
 };
 
-const STORAGE_KEY = "resumeai.resume.editor.v2";
+type DashboardEditorProps = {
+  username: string;
+  initialAvatarUrl?: string | null;
+};
+
+const STORAGE_KEY = "resumeai.resume.editor.v3";
 
 const TEMPLATES: TemplateMeta[] = [
   {
@@ -80,7 +87,7 @@ const PRESETS: Record<TemplateId, ResumeData> = {
     fullName: "李明",
     headline: "高级前端工程师 | React / Next.js / AI",
     summary:
-      "5 年 Web 开发经验，主导过中后台与 AI 应用落地。擅长通过性能优化和用户体验改进提升关键业务指标。",
+      "5 年 Web 开发经验，主导过中后台与 AI 应用落地。擅长通过性能优化和体验升级提升核心业务指标。",
     email: "liming@example.com",
     phone: "138-8888-8888",
     location: "上海",
@@ -194,13 +201,6 @@ function deepCopy<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function makeId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
 function normalizeSkills(raw: string) {
   return Array.from(
     new Set(
@@ -219,28 +219,16 @@ function normalizeUrl(url: string) {
   return `https://${value}`;
 }
 
-function Label({ children }: { children: string }) {
-  return <p className="mb-1 text-xs font-medium text-slate-300">{children}</p>;
+function toDisplayAvatarUrl(rawUrl: string | null) {
+  if (!rawUrl) return null;
+  if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+    return `/api/user/avatar/proxy?src=${encodeURIComponent(rawUrl)}`;
+  }
+  return rawUrl;
 }
 
-function Section({
-  title,
-  children,
-  action,
-}: {
-  title: string;
-  children: React.ReactNode;
-  action?: React.ReactNode;
-}) {
-  return (
-    <Card className="border-white/10 bg-white/[0.03] shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
-      <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-sm text-[#d7c6a4]">{title}</CardTitle>
-        {action}
-      </CardHeader>
-      <CardContent className="space-y-2">{children}</CardContent>
-    </Card>
-  );
+function Label({ children }: { children: string }) {
+  return <p className="mb-1 text-xs font-medium text-slate-300">{children}</p>;
 }
 
 function Preview({ template, resume }: { template: TemplateId; resume: ResumeData }) {
@@ -347,10 +335,15 @@ function Preview({ template, resume }: { template: TemplateId; resume: ResumeDat
   );
 }
 
-export default function DashboardEditor() {
+export default function DashboardEditor({ username, initialAvatarUrl = null }: DashboardEditorProps) {
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [template, setTemplate] = useState<TemplateId>("modern");
   const [resume, setResume] = useState<ResumeData>(() => deepCopy(PRESETS.modern));
   const [skillsText, setSkillsText] = useState(PRESETS.modern.skills.join("，"));
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -376,6 +369,34 @@ export default function DashboardEditor() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ template, resume }));
   }, [ready, resume, template]);
 
+  async function onLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
+
+  async function onPickAvatar(file: File) {
+    try {
+      setUploading(true);
+      setUploadError("");
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const res = await fetch("/api/user/avatar", { method: "POST", body: formData });
+      const data = (await res.json()) as { error?: string; avatarUrl?: string };
+      if (!res.ok || !data.avatarUrl) {
+        setUploadError(data.error ?? "上传失败，请稍后重试");
+        return;
+      }
+      setAvatarUrl(data.avatarUrl);
+      router.refresh();
+    } catch {
+      setUploadError("网络错误，请稍后重试");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   function applyTemplate(id: TemplateId) {
     const data = deepCopy(PRESETS[id]);
     setTemplate(id);
@@ -389,146 +410,98 @@ export default function DashboardEditor() {
   );
 
   return (
-    <section className="min-h-[940px] rounded-[26px] border border-white/10 bg-black/20 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.25)] md:p-5">
-      <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_500px]">
+    <section className="min-h-[940px] rounded-[26px] border border-white/10 bg-black/20 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.25)] md:p-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+        <div>
+          <p className="text-xl font-semibold text-slate-100">简历编辑器</p>
+          <p className="text-sm text-slate-400">你好，{username}。模板在右侧，编辑内容在左侧。</p>
+        </div>
+        <div className="flex gap-2">
+          <Button className="bg-[#329a60] text-[#d5f3e4] hover:bg-[#3da96e]" onClick={() => window.print()}>
+            导出 PDF
+          </Button>
+          <Button variant="outline" className="border-white/20 bg-transparent text-slate-200 hover:bg-white/10" onClick={onLogout}>
+            退出登录
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_520px]">
         <div className="space-y-4">
-          <Section title="基础信息">
-            <Label>姓名</Label>
-            <Input
-              value={resume.fullName}
-              onChange={(e) => setResume((prev) => ({ ...prev, fullName: e.target.value }))}
-              className="border-white/10 bg-white/[0.03] text-slate-100"
-            />
-            <Label>职位标题</Label>
-            <Input
-              value={resume.headline}
-              onChange={(e) => setResume((prev) => ({ ...prev, headline: e.target.value }))}
-              className="border-white/10 bg-white/[0.03] text-slate-100"
-            />
-            <Label>个人简介</Label>
-            <textarea
-              value={resume.summary}
-              onChange={(e) => setResume((prev) => ({ ...prev, summary: e.target.value }))}
-              className="h-24 w-full resize-none rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none"
-            />
-            <div className="grid gap-2 md:grid-cols-2">
-              <Input
-                value={resume.email}
-                onChange={(e) => setResume((prev) => ({ ...prev, email: e.target.value }))}
-                className="border-white/10 bg-white/[0.03] text-slate-100"
-                placeholder="邮箱"
-              />
-              <Input
-                value={resume.phone}
-                onChange={(e) => setResume((prev) => ({ ...prev, phone: e.target.value }))}
-                className="border-white/10 bg-white/[0.03] text-slate-100"
-                placeholder="电话"
-              />
-            </div>
-            <div className="grid gap-2 md:grid-cols-2">
-              <Input
-                value={resume.location}
-                onChange={(e) => setResume((prev) => ({ ...prev, location: e.target.value }))}
-                className="border-white/10 bg-white/[0.03] text-slate-100"
-                placeholder="城市"
-              />
-              <Input
-                value={resume.website}
-                onChange={(e) => setResume((prev) => ({ ...prev, website: e.target.value }))}
-                className="border-white/10 bg-white/[0.03] text-slate-100"
-                placeholder="网站/链接"
-              />
-            </div>
-          </Section>
-
-          <Section title="技能（逗号分隔）">
-            <textarea
-              value={skillsText}
-              onChange={(e) => setSkillsText(e.target.value)}
-              onBlur={() => setResume((prev) => ({ ...prev, skills: normalizeSkills(skillsText) }))}
-              className="h-16 w-full resize-none rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none"
-            />
-          </Section>
-
-          <Section
-            title="工作经历"
-            action={
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-white/20 bg-transparent text-slate-200 hover:bg-white/10"
-                onClick={() =>
-                  setResume((prev) => ({
-                    ...prev,
-                    experiences: [
-                      ...prev.experiences,
-                      { id: makeId(), role: "新职位", company: "新公司", period: "时间段", highlights: "请填写成果" },
-                    ],
-                  }))
-                }
+          <Card className="border-white/10 bg-[linear-gradient(120deg,rgba(49,90,151,0.32),rgba(13,25,46,0.7))] shadow-[0_16px_34px_rgba(0,0,0,0.28)]">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm text-slate-100">头像与身份信息</CardTitle>
+              <CardDescription className="text-slate-300">头像上传已合并到编辑器内部</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="relative grid h-20 w-20 place-items-center overflow-hidden rounded-full border border-white/20 bg-white/10 text-xs text-slate-200"
               >
-                添加
-              </Button>
-            }
-          >
-            {resume.experiences.map((item) => (
-              <div key={item.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
-                <div className="grid gap-2 md:grid-cols-2">
-                  <Input
-                    value={item.role}
-                    onChange={(e) =>
-                      setResume((prev) => ({
-                        ...prev,
-                        experiences: prev.experiences.map((x) =>
-                          x.id === item.id ? { ...x, role: e.target.value } : x,
-                        ),
-                      }))
-                    }
-                    className="border-white/10 bg-white/[0.03] text-slate-100"
-                    placeholder="职位"
-                  />
-                  <Input
-                    value={item.company}
-                    onChange={(e) =>
-                      setResume((prev) => ({
-                        ...prev,
-                        experiences: prev.experiences.map((x) =>
-                          x.id === item.id ? { ...x, company: e.target.value } : x,
-                        ),
-                      }))
-                    }
-                    className="border-white/10 bg-white/[0.03] text-slate-100"
-                    placeholder="公司"
-                  />
-                </div>
-                <Input
-                  value={item.period}
-                  onChange={(e) =>
-                    setResume((prev) => ({
-                      ...prev,
-                      experiences: prev.experiences.map((x) =>
-                        x.id === item.id ? { ...x, period: e.target.value } : x,
-                      ),
-                    }))
-                  }
-                  className="mt-2 border-white/10 bg-white/[0.03] text-slate-100"
-                  placeholder="时间段"
-                />
-                <textarea
-                  value={item.highlights}
-                  onChange={(e) =>
-                    setResume((prev) => ({
-                      ...prev,
-                      experiences: prev.experiences.map((x) =>
-                        x.id === item.id ? { ...x, highlights: e.target.value } : x,
-                      ),
-                    }))
-                  }
-                  className="mt-2 h-16 w-full resize-none rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none"
-                />
+                {avatarUrl ? (
+                  <img src={toDisplayAvatarUrl(avatarUrl) ?? ""} alt="avatar" className="h-full w-full object-cover" />
+                ) : (
+                  "上传头像"
+                )}
+                {uploading ? (
+                  <span className="absolute inset-0 grid place-items-center bg-black/50 text-[11px] text-white">上传中</span>
+                ) : null}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void onPickAvatar(file);
+                  e.currentTarget.value = "";
+                }}
+              />
+              <div>
+                <p className="text-lg font-semibold text-slate-100">{username}</p>
+                <p className="text-sm text-slate-300">点击头像可更换照片</p>
+                {uploadError ? <p className="mt-1 text-xs text-rose-300">{uploadError}</p> : null}
               </div>
-            ))}
-          </Section>
+            </CardContent>
+          </Card>
+
+          <Card className="border-white/10 bg-white/[0.03] shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm text-[#d7c6a4]">基础信息</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Label>姓名</Label>
+              <Input value={resume.fullName} onChange={(e) => setResume((prev) => ({ ...prev, fullName: e.target.value }))} className="border-white/10 bg-white/[0.03] text-slate-100" />
+              <Label>职位标题</Label>
+              <Input value={resume.headline} onChange={(e) => setResume((prev) => ({ ...prev, headline: e.target.value }))} className="border-white/10 bg-white/[0.03] text-slate-100" />
+              <Label>个人简介</Label>
+              <textarea value={resume.summary} onChange={(e) => setResume((prev) => ({ ...prev, summary: e.target.value }))} className="h-24 w-full resize-none rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none" />
+              <div className="grid gap-2 md:grid-cols-2">
+                <Input value={resume.email} onChange={(e) => setResume((prev) => ({ ...prev, email: e.target.value }))} className="border-white/10 bg-white/[0.03] text-slate-100" placeholder="邮箱" />
+                <Input value={resume.phone} onChange={(e) => setResume((prev) => ({ ...prev, phone: e.target.value }))} className="border-white/10 bg-white/[0.03] text-slate-100" placeholder="电话" />
+              </div>
+              <div className="grid gap-2 md:grid-cols-2">
+                <Input value={resume.location} onChange={(e) => setResume((prev) => ({ ...prev, location: e.target.value }))} className="border-white/10 bg-white/[0.03] text-slate-100" placeholder="城市" />
+                <Input value={resume.website} onChange={(e) => setResume((prev) => ({ ...prev, website: e.target.value }))} className="border-white/10 bg-white/[0.03] text-slate-100" placeholder="网站/链接" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-white/10 bg-white/[0.03] shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm text-[#d7c6a4]">技能（逗号分隔）</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <textarea
+                value={skillsText}
+                onChange={(e) => setSkillsText(e.target.value)}
+                onBlur={() => setResume((prev) => ({ ...prev, skills: normalizeSkills(skillsText) }))}
+                className="h-16 w-full resize-none rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none"
+              />
+            </CardContent>
+          </Card>
         </div>
 
         <div className="space-y-4">
@@ -553,20 +526,13 @@ export default function DashboardEditor() {
                   <p className="text-xs text-slate-400">{item.subtitle}</p>
                 </button>
               ))}
-
-              <Button
-                className="mt-2 w-full bg-[#329a60] text-[#d5f3e4] hover:bg-[#3da96e]"
-                onClick={() => window.print()}
-              >
-                导出 PDF
-              </Button>
             </CardContent>
           </Card>
 
           <Card className="border-white/10 bg-white/[0.03] shadow-[0_14px_32px_rgba(0,0,0,0.26)]">
             <CardHeader>
-              <CardTitle className="text-base text-slate-100">模板预览</CardTitle>
-              <CardDescription className="text-slate-400">右侧固定展示，方便对照编辑</CardDescription>
+              <CardTitle className="text-base text-slate-100">简历预览</CardTitle>
+              <CardDescription className="text-slate-400">右侧固定展示，所见即所得</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="max-h-[760px] overflow-auto rounded-xl bg-[#dbe4f1] p-3">
