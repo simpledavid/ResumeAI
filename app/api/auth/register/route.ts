@@ -30,7 +30,7 @@ function getInfraErrorMessage(error: unknown, fallback: string) {
     return "数据库未初始化：请先执行 D1 migration";
   }
 
-  return fallback;
+  return message ? `${fallback}: ${message}` : fallback;
 }
 
 export async function POST(req: Request) {
