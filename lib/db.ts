@@ -1,5 +1,5 @@
 // Cloudflare D1 Database Utilities
-import { D1Database } from '@cloudflare/workers-types';
+import type { D1Database } from '@cloudflare/workers-types';
 
 // Types matching our Prisma schema
 export interface User {
