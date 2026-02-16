@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSessionToken, setSessionCookie } from "@/lib/auth";
 import { getDb } from "@/lib/cloudflare";
+import { ensureD1Schema } from "@/lib/d1-schema";
 
 export const runtime = "edge";
 
@@ -39,6 +40,7 @@ export async function POST(req: Request) {
     }
 
     const { account, password } = parsed.data;
+    await ensureD1Schema(req);
     const db = getDb(req);
 
     let user = await db.users.findUserByUsername(account);

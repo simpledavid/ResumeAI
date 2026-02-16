@@ -2,6 +2,7 @@
 import { getSessionFromCookie } from "@/lib/auth";
 import { getUserProfileById } from "@/lib/user-profile";
 import { getEnv } from "@/lib/cloudflare";
+import { ensureD1Schema } from "@/lib/d1-schema";
 
 export const runtime = "edge";
 
@@ -26,6 +27,7 @@ export async function GET(req: Request) {
     }
 
     const env = getEnv(req);
+    await ensureD1Schema(req);
     const user = await getUserProfileById(session.sub, env.DB);
 
     if (!user) {
