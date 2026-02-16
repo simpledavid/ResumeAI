@@ -29,9 +29,9 @@ export async function ensureDb() {
     ON "User" ("email")
   `);
 
-  const columns = await prisma.$queryRawUnsafe<Array<{ name: string }>>(
+  const columns = (await prisma.$queryRawUnsafe(
     `PRAGMA table_info("User")`,
-  );
+  )) as Array<{ name: string }>;
   const hasAvatarUrl = columns.some((c) => c.name === "avatarUrl");
   if (!hasAvatarUrl) {
     await prisma.$executeRawUnsafe(
