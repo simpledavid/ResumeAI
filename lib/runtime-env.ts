@@ -1,24 +1,13 @@
-import { getRequestContext } from "@cloudflare/next-on-pages";
-
-type EnvRecord = Record<string, unknown>;
-
-/**
- * Read environment variables in Cloudflare Pages Functions and local Node runtimes.
- */
 export function readRuntimeEnv(name: string): string | undefined {
-  try {
-    const context = getRequestContext();
-    const env = context?.env as EnvRecord | undefined;
-    const value = env?.[name];
-    if (typeof value === "string" && value.length > 0) {
-      return value;
-    }
-  } catch {
-    // getRequestContext is unavailable outside Cloudflare request handling.
+  // Avoid importing Cloudflare runtime helpers here: this file is used by Edge routes.
+  const globalEnv = (globalThis as { __env?: Record<string, string> }).__env;
+  if (globalEnv && typeof globalEnv[name] === "string" && globalEnv[name]) {
+    return globalEnv[name];
   }
 
-  if (typeof process !== "undefined") {
-    const value = process.env?.[name];
+  const proc = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process;
+  if (proc?.env) {
+    const value = proc.env[name];
     if (typeof value === "string" && value.length > 0) {
       return value;
     }
