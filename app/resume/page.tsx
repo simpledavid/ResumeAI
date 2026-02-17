@@ -812,7 +812,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         setSavedAt(new Date().toISOString());
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed.");
+      setError(err instanceof Error ? err.message : "保存失败，请重试。");
     } finally {
       setSaving(false);
     }
@@ -925,6 +925,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
       text.experience,
       text.projects,
     ].some(hasValue);
+    const hasAiContent = [aiLines.tools, aiLines.products].some(hasValue);
     const hasExperienceContent = structuredResume.experience.some(
       (item) =>
         [
@@ -959,6 +960,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
       hasBasicsContent ||
       hasEducationLineContent ||
       hasTextContent ||
+      hasAiContent ||
       hasExperienceContent ||
       hasProjectContent ||
       hasEducationContent ||
@@ -1202,7 +1204,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         style={{ backgroundColor: template.pageBg }}
       >
         <div className="mx-auto flex max-w-[900px] flex-col gap-4 px-4 py-6">
-                {canEdit ? (
+          {canEdit ? (
             <div className="flex flex-wrap items-center justify-end gap-2 text-sm text-slate-600">
               {username ? (
                 <a
@@ -1224,30 +1226,39 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                 disabled={saving}
                 className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {saving ? "Saving..." : "Save"}
+                {saving ? "保存中..." : "保存"}
               </button>
               <button
                 onClick={handleGenerate}
                 disabled={loading}
                 className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {loading ? "AI running..." : "AI polish"}
+                {loading ? "AI润色中..." : "AI润色"}
               </button>
               <button
                 onClick={handleDownload}
                 disabled={downloading}
                 className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {downloading ? "Generating..." : "Download PDF"}
+                {downloading ? "生成中..." : "下载PDF"}
               </button>
               <button
                 onClick={handleLogout}
                 className="flex h-9 w-9 items-center justify-center rounded border border-slate-300 bg-white text-slate-700 transition hover:border-slate-400"
-                aria-label="Logout"
-                title="Logout"
+                aria-label="退出登录"
+                title="退出登录"
               >
                 <LogOut className="h-4 w-4" aria-hidden />
               </button>
+            </div>
+          ) : isReadonly ? (
+            <div className="flex justify-end" data-export="exclude">
+              <a
+                href="/register"
+                className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400"
+              >
+                创建我的resumio
+              </a>
             </div>
           ) : null}
           {((canEdit && assistantMessage) || error) && (
@@ -1276,6 +1287,12 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                     singleLine
                   />
                 </div>
+                <EditableBlock
+                  value={basics.summary}
+                  onChange={(value) => updateBasics("summary", value)}
+                  placeholder="一段自我介绍"
+                  className="text-sm text-slate-700"
+                />
                 <div className={contactClass}>
                   <div className="flex items-center gap-1">
                     <Phone className="h-3.5 w-3.5" style={{ color: "var(--accent)" }} aria-hidden />
@@ -1326,7 +1343,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
               <div className={`flex flex-col gap-2 ${avatarWrapperClass}`}>
                 <label
                   htmlFor={canEdit ? "avatar-upload" : undefined}
-                  className={`flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-[#f59e0b] bg-[#fff7ed] text-xs text-[#9a3412] ${
+                  className={`flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-transparent text-xs text-slate-500 ${
                     canEdit ? "cursor-pointer" : "cursor-default"
                   }`}
                   aria-label="上传头像"
@@ -1355,63 +1372,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                 ) : null}
               </div>
             </div>
-            <div className="mt-2">
-              <div className="flex items-baseline gap-2">
-                <GraduationCap className="h-4 w-4" style={{ color: "var(--accent)" }} aria-hidden />
-                <h2
-                  className={template.sectionTitleClass}
-                  style={{ color: "var(--accent)" }}
-                >
-                  教育经历
-                </h2>
-                <div
-                  className={`flex-1 ${template.sectionLineClass}`}
-                  style={{ backgroundColor: "var(--line)" }}
-                />
-              </div>
-              <div className="mt-3 flex items-baseline gap-4 text-sm text-slate-700">
-                <div className="flex min-w-0 flex-1 items-baseline gap-2">
-                  <EditableBlock
-                    value={educationLine.school}
-                    onChange={(value) => updateEducationLine("school", value)}
-                    placeholder="学校名称"
-                    className="text-sm"
-                    singleLine
-                  />
-                  <span className="text-slate-400">—</span>
-                  <EditableBlock
-                    value={educationLine.major}
-                    onChange={(value) => updateEducationLine("major", value)}
-                    placeholder="专业"
-                    className="text-sm"
-                    singleLine
-                  />
-                </div>
-                <EditableBlock
-                  value={educationLine.period}
-                  onChange={(value) => updateEducationLine("period", value)}
-                  placeholder="时间"
-                  className="min-w-[90px] text-sm text-right text-slate-600"
-                  singleLine
-                />
-              </div>
-            </div>
           </div>
-
-          <Section
-            title="专业技能"
-            icon={Wrench}
-            className={template.sectionSpacing}
-            titleClassName={template.sectionTitleClass}
-            lineClassName={template.sectionLineClass}
-          >
-            <EditableBlock
-              value={text.skills}
-              onChange={(value) => updateText("skills", value)}
-              placeholder="直接写技能清单即可"
-              className="min-h-[160px]"
-            />
-          </Section>
 
           <Section
             title="工作经历"
@@ -1566,33 +1527,84 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
           </Section>
 
           <Section
-            title="AI能力"
+            title="专业技能"
+            icon={Wrench}
+            className={template.sectionSpacing}
+            titleClassName={template.sectionTitleClass}
+            lineClassName={template.sectionLineClass}
+          >
+            <EditableBlock
+              value={text.skills}
+              onChange={(value) => updateText("skills", value)}
+              placeholder="直接写技能清单即可"
+              className="min-h-[160px]"
+            />
+          </Section>
+
+          <Section
+            title="AI工具"
             icon={Sparkles}
             className={template.sectionSpacing}
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <div className="space-y-2">
-              <div className="grid grid-cols-[72px_1fr] items-center gap-2">
-                <span className="text-xs font-medium text-slate-500">AI工具</span>
+            <EditableBlock
+              value={aiLines.tools}
+              onChange={(value) => updateAiLine("tools", value)}
+              placeholder="例如：ChatGPT、Claude、Midjourney"
+              className="text-sm text-slate-700"
+              singleLine
+            />
+          </Section>
+
+          <Section
+            title="AI产品"
+            icon={Sparkles}
+            className={template.sectionSpacing}
+            titleClassName={template.sectionTitleClass}
+            lineClassName={template.sectionLineClass}
+          >
+            <EditableBlock
+              value={aiLines.products}
+              onChange={(value) => updateAiLine("products", value)}
+              placeholder="例如：个人简历助手、自动化内容工具"
+              className="text-sm text-slate-700"
+              singleLine
+            />
+          </Section>
+
+          <Section
+            title="教育经历"
+            icon={GraduationCap}
+            className={template.sectionSpacing}
+            titleClassName={template.sectionTitleClass}
+            lineClassName={template.sectionLineClass}
+          >
+            <div className="flex items-baseline gap-4 text-sm text-slate-700">
+              <div className="flex min-w-0 flex-1 items-baseline gap-2">
                 <EditableBlock
-                  value={aiLines.tools}
-                  onChange={(value) => updateAiLine("tools", value)}
-                  placeholder="例如：ChatGPT、Claude、Midjourney"
-                  className="text-sm text-slate-700"
+                  value={educationLine.school}
+                  onChange={(value) => updateEducationLine("school", value)}
+                  placeholder="学校名称"
+                  className="text-sm"
+                  singleLine
+                />
+                <span className="text-slate-400">—</span>
+                <EditableBlock
+                  value={educationLine.major}
+                  onChange={(value) => updateEducationLine("major", value)}
+                  placeholder="专业"
+                  className="text-sm"
                   singleLine
                 />
               </div>
-              <div className="grid grid-cols-[72px_1fr] items-center gap-2">
-                <span className="text-xs font-medium text-slate-500">AI产品</span>
-                <EditableBlock
-                  value={aiLines.products}
-                  onChange={(value) => updateAiLine("products", value)}
-                  placeholder="例如：个人简历助手、自动化内容工具"
-                  className="text-sm text-slate-700"
-                  singleLine
-                />
-              </div>
+              <EditableBlock
+                value={educationLine.period}
+                onChange={(value) => updateEducationLine("period", value)}
+                placeholder="时间"
+                className="min-w-[90px] text-sm text-right text-slate-600"
+                singleLine
+              />
             </div>
           </Section>
 
