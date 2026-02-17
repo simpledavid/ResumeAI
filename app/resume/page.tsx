@@ -319,16 +319,31 @@ const normalizeUrlValue = (value: string) => {
   return `https://${trimmed}`;
 };
 
+const inferSiteName = (hostname: string) => {
+  const host = hostname.replace(/^www\./i, "").toLowerCase();
+  if (host.includes("chatgpt.com")) return "ChatGPT";
+  if (host.includes("claude.ai")) return "Claude";
+  if (host.includes("notebooklm.google.com")) return "NotebookLM";
+  if (host.includes("gemini.google.com")) return "Gemini";
+  if (host.includes("openai.com")) return "OpenAI";
+  if (host.includes("deepseek.com")) return "DeepSeek";
+  if (host.includes("github.com")) return "GitHub";
+  if (host.includes("resumio.cn")) return "Resumio";
+
+  const first = host.split(".")[0] ?? host;
+  if (!first) return host;
+  return `${first.charAt(0).toUpperCase()}${first.slice(1)}`;
+};
+
 const parseUrlMeta = (value: string): UrlMeta | null => {
   const normalized = normalizeUrlValue(value);
   if (!normalized) return null;
   try {
     const parsed = new URL(normalized);
-    const host = parsed.hostname.replace(/^www\./i, "");
     const origin = `${parsed.protocol}//${parsed.hostname}`;
     return {
       href: parsed.toString(),
-      label: host || parsed.hostname,
+      label: inferSiteName(parsed.hostname),
       iconPrimary: `${origin}/favicon.ico`,
       iconFallback: `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
         origin,
@@ -553,6 +568,7 @@ function SiteIcon({
       src={src}
       alt={`${meta.label} icon`}
       className="h-4 w-4 shrink-0 rounded-sm"
+      data-export="exclude"
       loading="lazy"
       referrerPolicy="no-referrer"
       onError={() => {
@@ -1799,6 +1815,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             <div className="space-y-2">
               {aiLinks.tools.map((item, index) => {
                 const meta = parseUrlMeta(item);
+                const showInput = canEdit && (!meta || item.trim().length === 0);
                 return (
                   <div key={`ai-tool-${index}`} className="flex items-center gap-2">
                     <div className="flex min-w-0 flex-1 items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1.5">
@@ -1807,7 +1824,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                       ) : (
                         <span className="h-4 w-4 shrink-0 rounded-sm bg-slate-200" />
                       )}
-                      {canEdit ? (
+                      {showInput ? (
                         <input
                           value={item}
                           onChange={(event) =>
@@ -1822,9 +1839,9 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                           href={meta.href}
                           target="_blank"
                           rel="noreferrer"
-                          className="truncate text-sm text-slate-700 underline decoration-slate-300 underline-offset-2"
+                          className="truncate text-sm text-slate-700"
                         >
-                          {meta.href}
+                          {meta.label}
                         </a>
                       ) : (
                         <span className="truncate text-sm text-slate-700">{item}</span>
@@ -1866,6 +1883,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             <div className="space-y-2">
               {aiLinks.products.map((item, index) => {
                 const meta = parseUrlMeta(item);
+                const showInput = canEdit && (!meta || item.trim().length === 0);
                 return (
                   <div key={`ai-product-${index}`} className="flex items-center gap-2">
                     <div className="flex min-w-0 flex-1 items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1.5">
@@ -1874,7 +1892,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                       ) : (
                         <span className="h-4 w-4 shrink-0 rounded-sm bg-slate-200" />
                       )}
-                      {canEdit ? (
+                      {showInput ? (
                         <input
                           value={item}
                           onChange={(event) =>
@@ -1889,9 +1907,9 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                           href={meta.href}
                           target="_blank"
                           rel="noreferrer"
-                          className="truncate text-sm text-slate-700 underline decoration-slate-300 underline-offset-2"
+                          className="truncate text-sm text-slate-700"
                         >
-                          {meta.href}
+                          {meta.label}
                         </a>
                       ) : (
                         <span className="truncate text-sm text-slate-700">{item}</span>
