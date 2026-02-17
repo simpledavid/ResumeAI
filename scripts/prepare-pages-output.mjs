@@ -37,8 +37,6 @@ const flattenAssetsDir = async () => {
       await fs.cp(from, to, { force: true });
     }
   }
-
-  await removeIfExists(assetsDir);
 };
 
 const syncNextStaticAssets = async () => {
@@ -66,6 +64,20 @@ const prepareWorkerFile = async () => {
     .replace(
       /^.*BucketCachePurge.*$/m,
       ""
+    )
+    .replace(
+      "const url = new URL(request.url);",
+      [
+        "const url = new URL(request.url);",
+        "            if ((request.method === \"GET\" || request.method === \"HEAD\") && url.pathname.startsWith(\"/_next/\") && env.ASSETS) {",
+        "                const directAsset = await env.ASSETS.fetch(new URL(`${url.pathname}${url.search}`, \"https://assets.local\"), { method: request.method, headers: request.headers });",
+        "                if (directAsset.status !== 404) return directAsset;",
+        "                await directAsset.body?.cancel();",
+        "                const fallbackAsset = await env.ASSETS.fetch(new URL(`/assets${url.pathname}${url.search}`, \"https://assets.local\"), { method: request.method, headers: request.headers });",
+        "                if (fallbackAsset.status !== 404) return fallbackAsset;",
+        "                await fallbackAsset.body?.cancel();",
+        "            }",
+      ].join("\n")
     )
     // Pages runtime does not set this flag for OpenNext, so static assets must be enabled explicitly.
     .replace(
