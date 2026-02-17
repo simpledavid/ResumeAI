@@ -14,6 +14,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import {
   Briefcase,
+  CalendarDays,
   FolderKanban,
   GraduationCap,
   LogOut,
@@ -21,7 +22,9 @@ import {
   MapPin,
   Phone,
   Sparkles,
+  Target,
   UserRound,
+  VenusAndMars,
   Wrench,
 } from "lucide-react";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
@@ -1495,7 +1498,11 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   />
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-[11px] text-slate-500">性别</span>
+                    <VenusAndMars
+                      className="h-3.5 w-3.5"
+                      style={{ color: "var(--accent)" }}
+                      aria-hidden
+                    />
                     <EditableBlock
                     value={basics.gender}
                     onChange={(value) => updateBasics("gender", value)}
@@ -1505,7 +1512,11 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   />
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-[11px] text-slate-500">年龄</span>
+                    <CalendarDays
+                      className="h-3.5 w-3.5"
+                      style={{ color: "var(--accent)" }}
+                      aria-hidden
+                    />
                     <EditableBlock
                     value={basics.age}
                     onChange={(value) => updateBasics("age", value)}
@@ -1525,7 +1536,11 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   />
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-[11px] text-slate-500">求职</span>
+                    <Target
+                      className="h-3.5 w-3.5"
+                      style={{ color: "var(--accent)" }}
+                      aria-hidden
+                    />
                     <EditableBlock
                       value={basics.jobTarget}
                       onChange={(value) => updateBasics("jobTarget", value)}
@@ -1812,49 +1827,47 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">
               {aiLinks.tools.map((item, index) => {
                 const meta = parseUrlMeta(item);
                 const showInput = canEdit && (!meta || item.trim().length === 0);
                 return (
-                  <div key={`ai-tool-${index}`} className="flex items-center gap-2">
-                    <div className="flex min-w-0 flex-1 items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1.5">
-                      {meta ? (
+                  <div
+                    key={`ai-tool-${index}`}
+                    className="relative flex min-h-10 items-center rounded border border-slate-200 bg-white px-2 py-1.5"
+                  >
+                    {showInput ? (
+                      <input
+                        value={item}
+                        onChange={(event) =>
+                          updateAiLink("tools", index, event.target.value)
+                        }
+                        onBlur={() => normalizeAiLinkItem("tools", index)}
+                        placeholder="https://chatgpt.com/"
+                        className="min-w-0 flex-1 bg-transparent pr-7 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                      />
+                    ) : meta ? (
+                      <a
+                        href={meta.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex min-w-0 items-center gap-2 text-sm text-slate-700"
+                      >
                         <SiteIcon meta={meta} />
-                      ) : (
-                        <span className="h-4 w-4 shrink-0 rounded-sm bg-slate-200" />
-                      )}
-                      {showInput ? (
-                        <input
-                          value={item}
-                          onChange={(event) =>
-                            updateAiLink("tools", index, event.target.value)
-                          }
-                          onBlur={() => normalizeAiLinkItem("tools", index)}
-                          placeholder="https://chatgpt.com/"
-                          className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-                        />
-                      ) : meta ? (
-                        <a
-                          href={meta.href}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="truncate text-sm text-slate-700"
-                        >
-                          {meta.label}
-                        </a>
-                      ) : (
-                        <span className="truncate text-sm text-slate-700">{item}</span>
-                      )}
-                    </div>
+                        <span className="truncate">{meta.label}</span>
+                      </a>
+                    ) : (
+                      <span className="truncate text-sm text-slate-700">{item}</span>
+                    )}
                     {canEdit ? (
                       <button
                         type="button"
                         onClick={() => removeAiLink("tools", index)}
                         data-export="exclude"
-                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-500 transition hover:border-slate-400"
+                        className="absolute right-1 top-1 rounded px-1 text-xs text-slate-500 transition hover:bg-slate-100"
+                        aria-label="删除"
                       >
-                        删除
+                        ×
                       </button>
                     ) : null}
                   </div>
@@ -1865,7 +1878,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   type="button"
                   onClick={() => addAiLink("tools")}
                   data-export="exclude"
-                  className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
+                  className="flex min-h-10 items-center justify-center rounded border border-dashed border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
                 >
                   增加
                 </button>
@@ -1880,49 +1893,47 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">
               {aiLinks.products.map((item, index) => {
                 const meta = parseUrlMeta(item);
                 const showInput = canEdit && (!meta || item.trim().length === 0);
                 return (
-                  <div key={`ai-product-${index}`} className="flex items-center gap-2">
-                    <div className="flex min-w-0 flex-1 items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1.5">
-                      {meta ? (
+                  <div
+                    key={`ai-product-${index}`}
+                    className="relative flex min-h-10 items-center rounded border border-slate-200 bg-white px-2 py-1.5"
+                  >
+                    {showInput ? (
+                      <input
+                        value={item}
+                        onChange={(event) =>
+                          updateAiLink("products", index, event.target.value)
+                        }
+                        onBlur={() => normalizeAiLinkItem("products", index)}
+                        placeholder="https://example.com/"
+                        className="min-w-0 flex-1 bg-transparent pr-7 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                      />
+                    ) : meta ? (
+                      <a
+                        href={meta.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex min-w-0 items-center gap-2 text-sm text-slate-700"
+                      >
                         <SiteIcon meta={meta} />
-                      ) : (
-                        <span className="h-4 w-4 shrink-0 rounded-sm bg-slate-200" />
-                      )}
-                      {showInput ? (
-                        <input
-                          value={item}
-                          onChange={(event) =>
-                            updateAiLink("products", index, event.target.value)
-                          }
-                          onBlur={() => normalizeAiLinkItem("products", index)}
-                          placeholder="https://example.com/"
-                          className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-                        />
-                      ) : meta ? (
-                        <a
-                          href={meta.href}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="truncate text-sm text-slate-700"
-                        >
-                          {meta.label}
-                        </a>
-                      ) : (
-                        <span className="truncate text-sm text-slate-700">{item}</span>
-                      )}
-                    </div>
+                        <span className="truncate">{meta.label}</span>
+                      </a>
+                    ) : (
+                      <span className="truncate text-sm text-slate-700">{item}</span>
+                    )}
                     {canEdit ? (
                       <button
                         type="button"
                         onClick={() => removeAiLink("products", index)}
                         data-export="exclude"
-                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-500 transition hover:border-slate-400"
+                        className="absolute right-1 top-1 rounded px-1 text-xs text-slate-500 transition hover:bg-slate-100"
+                        aria-label="删除"
                       >
-                        删除
+                        ×
                       </button>
                     ) : null}
                   </div>
@@ -1933,7 +1944,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   type="button"
                   onClick={() => addAiLink("products")}
                   data-export="exclude"
-                  className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
+                  className="flex min-h-10 items-center justify-center rounded border border-dashed border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
                 >
                   增加
                 </button>
