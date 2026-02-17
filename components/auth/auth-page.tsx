@@ -56,6 +56,7 @@ const GoogleIcon = () => (
 );
 
 const usernamePattern = /^[a-z0-9_-]{3,24}$/;
+const HERO_TEXT = "AI时代的简历";
 
 export default function AuthPage({ mode }: { mode: AuthMode }) {
   const router = useRouter();
@@ -65,6 +66,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [typingIndex, setTypingIndex] = useState(0);
   const [form, setForm] = useState<FormState>({
     identifier: "",
     username: "",
@@ -74,6 +76,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
 
   const isLogin = mode === "login";
   const isLightTheme = theme === "light";
+  const typedHeroText = HERO_TEXT.slice(0, typingIndex);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("auth-theme");
@@ -81,6 +84,16 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
       setTheme(saved);
     }
   }, []);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (typingIndex < HERO_TEXT.length) {
+      timer = setTimeout(() => setTypingIndex((value) => value + 1), 120);
+    } else {
+      timer = setTimeout(() => setTypingIndex(0), 1500);
+    }
+    return () => clearTimeout(timer);
+  }, [typingIndex]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -201,7 +214,9 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
   const usernameInputClassName = isLightTheme
     ? "w-full bg-transparent text-sm text-[#111827] outline-none placeholder:text-[#9ca3af]"
     : "w-full bg-transparent text-sm text-[#f5f5f5] outline-none placeholder:text-[#6d6d6d]";
-  const dividerClassName = isLightTheme ? "h-px flex-1 bg-[#e5e7eb]" : "h-px flex-1 bg-[#252525]";
+  const dividerClassName = isLightTheme
+    ? "h-px flex-1 bg-[#e5e7eb]"
+    : "h-px flex-1 bg-[#252525]";
   const oauthButtonClassName = isLightTheme
     ? "flex h-11 items-center justify-center gap-2 rounded-xl border border-[#d4d4d8] bg-[#ffffff] text-sm text-[#374151] transition hover:border-[#ff9d23] hover:text-[#c26a00]"
     : "flex h-11 items-center justify-center gap-2 rounded-xl border border-[#2a2a2a] bg-[#101010] text-sm text-[#dbdbdb] transition hover:border-[#ff9d23] hover:text-[#ffd18a]";
@@ -241,7 +256,10 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
       </div>
 
       <div className="relative z-10 flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center">
-        <h1 className={heroClassName}>AI时代的简历</h1>
+        <h1 className={heroClassName}>
+          {typedHeroText}
+          <span className="ml-1 inline-block w-[0.6ch] animate-pulse">|</span>
+        </h1>
 
         <div className="w-full max-w-[560px]">
           <section className={cardClassName}>

@@ -21,6 +21,7 @@ import {
   Mail,
   MapPin,
   Phone,
+  Sparkles,
   UserRound,
   Wrench,
 } from "lucide-react";
@@ -62,7 +63,7 @@ const templates: TemplateConfig[] = [
   {
     id: "classic",
     label: "经典蓝",
-    description: "榛樿鏍峰紡",
+    description: "默认样式",
     accent: "#1f4f8c",
     line: "#cbd5e1",
     pageBg: "#f1f3f5",
@@ -80,7 +81,7 @@ const templates: TemplateConfig[] = [
   {
     id: "warm",
     label: "暖调橙",
-    description: "鐣欑櫧鏇村ぇ",
+    description: "留白更大",
     accent: "#b45309",
     line: "#f59e0b",
     pageBg: "#faf6ef",
@@ -98,7 +99,7 @@ const templates: TemplateConfig[] = [
   {
     id: "minimal",
     label: "极简黑",
-    description: "绱у噾鎺掔増",
+    description: "紧凑排版",
     accent: "#111827",
     line: "#e5e7eb",
     pageBg: "#f8fafc",
@@ -152,6 +153,8 @@ type Resume = {
     link: string;
     highlights: string[];
   }[];
+  aiTools?: string;
+  aiProducts?: string;
 };
 
 type ChatApiResponse = {
@@ -206,6 +209,11 @@ type EducationLine = {
   school: string;
   major: string;
   period: string;
+};
+
+type AiLines = {
+  tools: string;
+  products: string;
 };
 
 const createEmptyExperienceItem = (): Resume["experience"][number] => ({
@@ -265,6 +273,11 @@ const emptyEducationLine: EducationLine = {
   period: "",
 };
 
+const emptyAiLines: AiLines = {
+  tools: "",
+  products: "",
+};
+
 const normalizeResume = (resume: Resume): Resume => {
   const experienceSource = Array.isArray(resume.experience)
     ? resume.experience
@@ -298,6 +311,8 @@ const normalizeResume = (resume: Resume): Resume => {
 
   return {
     ...resume,
+    aiTools: typeof resume.aiTools === "string" ? resume.aiTools : "",
+    aiProducts: typeof resume.aiProducts === "string" ? resume.aiProducts : "",
     experience,
     projects,
   };
@@ -312,7 +327,7 @@ const formatRange = (start: string, end: string) => {
 const formatLines = (values: string[]) => values.filter(Boolean).join("\n");
 
 const formatEducationLine = (value: EducationLine) => {
-  const left = [value.school, value.major].filter(Boolean).join(" 鈥斺€?");
+  const left = [value.school, value.major].filter(Boolean).join(" - ");
   return [left, value.period].filter(Boolean).join("  ");
 };
 
@@ -346,7 +361,7 @@ const formatProjects = (values: Resume["projects"]) =>
     .map((item) => {
       const header = [item.name, item.link].filter(Boolean).join(" ");
       const techLine =
-        item.tech.length > 0 ? `鎶€鏈爤 ${item.tech.join(" ")}` : "";
+        item.tech.length > 0 ? `技术栈 ${item.tech.join(" ")}` : "";
       const lines = [
         header,
         item.description,
@@ -461,6 +476,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
   const [text, setText] = useState<TextSections>(emptyTextSections);
   const [educationLine, setEducationLine] =
     useState<EducationLine>(emptyEducationLine);
+  const [aiLines, setAiLines] = useState<AiLines>(emptyAiLines);
   const [structuredResume, setStructuredResume] = useState<Resume>(emptyResume);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -518,6 +534,14 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
   const updateEducationLine = (field: keyof EducationLine, value: string) => {
     if (isReadonly) return;
     setEducationLine((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const updateAiLine = (field: keyof AiLines, value: string) => {
+    if (isReadonly) return;
+    setAiLines((prev) => ({
       ...prev,
       [field]: value,
     }));
@@ -599,6 +623,10 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     } else {
       setEducationLine(emptyEducationLine);
     }
+    setAiLines({
+      tools: normalizedResume.aiTools ?? "",
+      products: normalizedResume.aiProducts ?? "",
+    });
   };
 
   const buildResumePayload = (): Resume => {
@@ -606,6 +634,8 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
       educationLine.school || educationLine.major || educationLine.period;
     return {
       ...structuredResume,
+      aiTools: aiLines.tools,
+      aiProducts: aiLines.products,
       basics: {
         ...structuredResume.basics,
         ...basics,
@@ -861,7 +891,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         if (response.status === 429) {
           throw new Error("您所在 IP 今日额度已用完，明日重置。");
         }
-        throw new Error(data?.error || "璇锋眰澶辫触");
+        throw new Error(data?.error || "请求失败");
       }
 
       if (data?.resume) {
@@ -1148,7 +1178,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
       }
 
-      const filename = basics.name ? `${basics.name}-绠€鍘?pdf` : "绠€鍘?pdf";
+      const filename = basics.name ? `${basics.name}-简历.pdf` : "简历.pdf";
       pdf.save(filename);
     } catch (err) {
       setError(err instanceof Error ? err.message : "PDF 生成失败，请重试。");
@@ -1160,7 +1190,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
   if (booting) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f1f3f5] text-slate-600">
-        姝ｅ湪鍔犺浇...
+        正在加载...
       </div>
     );
   }
@@ -1186,7 +1216,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
               ) : null}
               {savedAt ? (
                 <span className="text-xs text-slate-500">
-                  宸蹭繚瀛?{new Date(savedAt).toLocaleTimeString("zh-CN")}
+                  已保存 {new Date(savedAt).toLocaleTimeString("zh-CN")}
                 </span>
               ) : null}
               <button
@@ -1241,7 +1271,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   <EditableBlock
                     value={basics.name}
                     onChange={(value) => updateBasics("name", value)}
-                    placeholder="浣犵殑濮撳悕"
+                    placeholder="你的姓名"
                     className="!text-2xl font-semibold text-slate-900 [font-family:var(--font-heading)]"
                     singleLine
                   />
@@ -1252,7 +1282,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                     <EditableBlock
                     value={basics.phone}
                     onChange={(value) => updateBasics("phone", value)}
-                    placeholder="鐢佃瘽"
+                    placeholder="电话"
                     className="text-xs"
                     singleLine
                   />
@@ -1262,7 +1292,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                     <EditableBlock
                     value={basics.email}
                     onChange={(value) => updateBasics("email", value)}
-                    placeholder="閭"
+                    placeholder="邮箱"
                     className="text-xs"
                     singleLine
                   />
@@ -1276,7 +1306,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                     <EditableBlock
                       value={basics.website}
                       onChange={(value) => updateBasics("website", value)}
-                      placeholder="涓汉閾炬帴"
+                      placeholder="个人链接"
                       className="text-xs"
                       singleLine
                     />
@@ -1286,7 +1316,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                     <EditableBlock
                     value={basics.location}
                     onChange={(value) => updateBasics("location", value)}
-                    placeholder="鍩庡競"
+                    placeholder="城市"
                     className="text-xs"
                     singleLine
                   />
@@ -1299,17 +1329,17 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   className={`flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-[#f59e0b] bg-[#fff7ed] text-xs text-[#9a3412] ${
                     canEdit ? "cursor-pointer" : "cursor-default"
                   }`}
-                  aria-label="涓婁紶澶村儚"
+                  aria-label="上传头像"
                 >
                   {avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={avatarUrl}
-                      alt="澶村儚"
+                      alt="头像"
                       className="h-full w-full rounded-full object-cover"
                     />
                   ) : (
-                    "涓婁紶澶村儚"
+                    "上传头像"
                   )}
                 </label>
                 {canEdit ? (
@@ -1332,7 +1362,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   className={template.sectionTitleClass}
                   style={{ color: "var(--accent)" }}
                 >
-                  鏁欒偛缁忓巻
+                  教育经历
                 </h2>
                 <div
                   className={`flex-1 ${template.sectionLineClass}`}
@@ -1344,7 +1374,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   <EditableBlock
                     value={educationLine.school}
                     onChange={(value) => updateEducationLine("school", value)}
-                    placeholder="瀛︽牎鍚嶇О"
+                    placeholder="学校名称"
                     className="text-sm"
                     singleLine
                   />
@@ -1352,7 +1382,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   <EditableBlock
                     value={educationLine.major}
                     onChange={(value) => updateEducationLine("major", value)}
-                    placeholder="涓撲笟"
+                    placeholder="专业"
                     className="text-sm"
                     singleLine
                   />
@@ -1360,7 +1390,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                 <EditableBlock
                   value={educationLine.period}
                   onChange={(value) => updateEducationLine("period", value)}
-                  placeholder="鏃堕棿"
+                  placeholder="时间"
                   className="min-w-[90px] text-sm text-right text-slate-600"
                   singleLine
                 />
@@ -1384,7 +1414,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
           </Section>
 
           <Section
-            title="宸ヤ綔缁忓巻"
+            title="工作经历"
             icon={Briefcase}
             className={template.sectionSpacing}
             titleClassName={template.sectionTitleClass}
@@ -1402,7 +1432,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                               onChange={(value) =>
                                 updateExperienceField(index, "role", value)
                               }
-                              placeholder="缁忓巻鍚嶇О"
+                              placeholder="职位"
                               className="font-semibold text-slate-900"
                               singleLine
                             />
@@ -1412,7 +1442,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                               onChange={(value) =>
                                 updateExperienceField(index, "company", value)
                               }
-                              placeholder="鍏徃"
+                              placeholder="公司"
                               className="font-semibold text-slate-900"
                               singleLine
                             />
@@ -1433,7 +1463,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                               onChange={(value) =>
                                 updateExperienceField(index, "endDate", value)
                               }
-                              placeholder="缁撴潫"
+                              placeholder="结束"
                               className="min-w-[52px] text-right text-xs text-slate-600"
                               singleLine
                             />
@@ -1444,7 +1474,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                           onChange={(value) =>
                             updateExperienceField(index, "summary", value)
                           }
-                          placeholder="缁忓巻姒傝堪"
+                          placeholder="经历概述"
                           className="text-sm text-slate-700"
                         />
                       </div>
@@ -1457,7 +1487,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                     data-export="exclude"
                     className="mt-3 rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
                   >
-                    澧炲姞
+                    增加
                   </button>
                 ) : null}
               </>
@@ -1465,14 +1495,14 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
               <EditableBlock
                 value={text.experience}
                 onChange={(value) => updateText("experience", value)}
-                placeholder="鐩存帴鎻忚堪姣忔缁忓巻锛屽彲鎹㈣"
+                placeholder="直接描述每段经历，可换行"
                 className="min-h-[220px]"
               />
             )}
           </Section>
 
           <Section
-            title="椤圭洰缁忓巻"
+            title="项目经历"
             icon={FolderKanban}
             className={template.sectionSpacing}
             titleClassName={template.sectionTitleClass}
@@ -1489,7 +1519,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                           onChange={(value) =>
                             updateProjectField(index, "name", value)
                           }
-                          placeholder="椤圭洰鍚嶇О"
+                          placeholder="项目名称"
                           className="font-semibold text-slate-900"
                           singleLine
                         />
@@ -1498,7 +1528,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                           onChange={(value) =>
                             updateProjectField(index, "link", value)
                           }
-                          placeholder="閾炬帴"
+                          placeholder="链接"
                           className="min-w-[120px] text-right text-xs text-slate-600"
                           singleLine
                         />
@@ -1508,7 +1538,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                         onChange={(value) =>
                           updateProjectField(index, "description", value)
                         }
-                        placeholder="椤圭洰姒傝堪"
+                        placeholder="项目概述"
                         className="text-sm text-slate-700"
                       />
                     </div>
@@ -1521,7 +1551,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                     data-export="exclude"
                     className="mt-3 rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
                   >
-                    澧炲姞
+                    增加
                   </button>
                 ) : null}
               </>
@@ -1533,6 +1563,37 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                 className="min-h-[220px]"
               />
             )}
+          </Section>
+
+          <Section
+            title="AI能力"
+            icon={Sparkles}
+            className={template.sectionSpacing}
+            titleClassName={template.sectionTitleClass}
+            lineClassName={template.sectionLineClass}
+          >
+            <div className="space-y-2">
+              <div className="grid grid-cols-[72px_1fr] items-center gap-2">
+                <span className="text-xs font-medium text-slate-500">AI工具</span>
+                <EditableBlock
+                  value={aiLines.tools}
+                  onChange={(value) => updateAiLine("tools", value)}
+                  placeholder="例如：ChatGPT、Claude、Midjourney"
+                  className="text-sm text-slate-700"
+                  singleLine
+                />
+              </div>
+              <div className="grid grid-cols-[72px_1fr] items-center gap-2">
+                <span className="text-xs font-medium text-slate-500">AI产品</span>
+                <EditableBlock
+                  value={aiLines.products}
+                  onChange={(value) => updateAiLine("products", value)}
+                  placeholder="例如：个人简历助手、自动化内容工具"
+                  className="text-sm text-slate-700"
+                  singleLine
+                />
+              </div>
+            </div>
           </Section>
 
           
