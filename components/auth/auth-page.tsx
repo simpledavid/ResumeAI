@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -55,16 +55,6 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const getInputClassName = (isLightTheme: boolean) =>
-  isLightTheme
-    ? "h-11 w-full rounded-xl border border-[#d4d4d8] bg-[#ffffff] px-3 text-sm text-[#111827] outline-none placeholder:text-[#9ca3af] transition focus:border-[#ff8700] focus:shadow-[0_0_0_2px_rgba(255,135,0,0.18)]"
-    : "h-11 w-full rounded-xl border border-[#2a2a2a] bg-[#101010] px-3 text-sm text-[#f5f5f5] outline-none placeholder:text-[#6d6d6d] transition focus:border-[#ff8700] focus:shadow-[0_0_0_2px_rgba(255,135,0,0.22)]";
-
-const getEyeButtonClassName = (isLightTheme: boolean) =>
-  isLightTheme
-    ? "grid h-11 w-11 place-items-center rounded-xl border border-[#d4d4d8] bg-[#ffffff] text-[#6b7280] transition hover:border-[#ff8700] hover:text-[#c26a00]"
-    : "grid h-11 w-11 place-items-center rounded-xl border border-[#2a2a2a] bg-[#101010] text-[#8a8a8a] transition hover:border-[#ff8700] hover:text-[#ffc168]";
-
 const usernamePattern = /^[a-z0-9_-]{3,24}$/;
 
 export default function AuthPage({ mode }: { mode: AuthMode }) {
@@ -84,40 +74,6 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
 
   const isLogin = mode === "login";
   const isLightTheme = theme === "light";
-  const inputClassName = getInputClassName(isLightTheme);
-  const eyeButtonClassName = getEyeButtonClassName(isLightTheme);
-  const pageClassName = isLightTheme
-    ? "relative flex min-h-screen items-center justify-center overflow-hidden bg-[#ffffff] px-4 py-8 text-[#111827]"
-    : "relative flex min-h-screen items-center justify-center overflow-hidden bg-[#000000] px-4 py-8 text-[#f5f5f5]";
-  const gridClassName = isLightTheme
-    ? "pointer-events-none absolute inset-0 opacity-[0.4] [background-image:linear-gradient(rgba(17,24,39,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(17,24,39,0.06)_1px,transparent_1px)] [background-size:14px_14px]"
-    : "pointer-events-none absolute inset-0 opacity-[0.09] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:14px_14px]";
-  const cardClassName = isLightTheme
-    ? "relative rounded-[26px] border border-[#e5e7eb] bg-[#ffffff]/95 p-6 shadow-[0_22px_60px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:p-7"
-    : "relative rounded-[26px] border border-[#1d1d1d] bg-[#090909]/95 p-6 shadow-[0_36px_90px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:p-7";
-  const switchShellClassName = isLightTheme
-    ? "inline-flex rounded-full border border-[#d4d4d8] bg-[#f8fafc] p-1"
-    : "inline-flex rounded-full border border-[#2a2a2a] bg-[#0d0d0d] p-1";
-  const inactiveSwitchClassName = isLightTheme
-    ? "text-[#6b7280] hover:text-[#111827]"
-    : "text-[#959595] hover:text-[#ececec]";
-  const dividerClassName = isLightTheme ? "h-px flex-1 bg-[#e5e7eb]" : "h-px flex-1 bg-[#252525]";
-  const oauthButtonClassName = isLightTheme
-    ? "flex h-11 items-center justify-center gap-2 rounded-xl border border-[#d4d4d8] bg-[#ffffff] text-sm text-[#374151] transition hover:border-[#ff9d23] hover:text-[#c26a00]"
-    : "flex h-11 items-center justify-center gap-2 rounded-xl border border-[#2a2a2a] bg-[#101010] text-sm text-[#dbdbdb] transition hover:border-[#ff9d23] hover:text-[#ffd18a]";
-  const usernameWrapClassName = isLightTheme
-    ? "grid h-11 grid-cols-[auto_1fr] items-center gap-2 rounded-xl border border-[#d4d4d8] bg-[#ffffff] px-3"
-    : "grid h-11 grid-cols-[auto_1fr] items-center gap-2 rounded-xl border border-[#2a2a2a] bg-[#101010] px-3";
-  const usernameInputClassName = isLightTheme
-    ? "w-full bg-transparent text-sm text-[#111827] outline-none placeholder:text-[#9ca3af]"
-    : "w-full bg-transparent text-sm text-[#f5f5f5] outline-none placeholder:text-[#6d6d6d]";
-  const themeChipClassName = isLightTheme
-    ? "inline-flex rounded-full border border-[#d4d4d8] bg-[#ffffff] p-1"
-    : "inline-flex rounded-full border border-[#2a2a2a] bg-[#0d0d0d] p-1";
-  const themeInactiveClassName = isLightTheme
-    ? "text-[#6b7280] hover:text-[#111827]"
-    : "text-[#8f8f8f] hover:text-[#ececec]";
-  const sloganClassName = isLightTheme ? "mb-4 text-sm text-[#6b7280]" : "mb-4 text-sm text-[#8f8f8f]";
 
   useEffect(() => {
     const saved = window.localStorage.getItem("auth-theme");
@@ -125,11 +81,6 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
       setTheme(saved);
     }
   }, []);
-
-  const changeTheme = (nextTheme: "dark" | "light") => {
-    setTheme(nextTheme);
-    window.localStorage.setItem("auth-theme", nextTheme);
-  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -139,6 +90,11 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     }
     setError("");
   }, []);
+
+  const changeTheme = (nextTheme: "dark" | "light") => {
+    setTheme(nextTheme);
+    window.localStorage.setItem("auth-theme", nextTheme);
+  };
 
   const update = (field: keyof FormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -201,7 +157,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
         return;
       }
 
-      setMessage(isLogin ? "鐧诲綍鎴愬姛锛屾鍦ㄨ繘鍏?.." : "娉ㄥ唽鎴愬姛锛屾鍦ㄨ繘鍏?..");
+      setMessage(isLogin ? "登录成功，正在进入..." : "注册成功，正在进入...");
       const targetUsername = data.user?.username ?? username;
       router.push(`/${targetUsername}`);
       router.refresh();
@@ -212,197 +168,254 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     }
   };
 
+  const pageClassName = isLightTheme
+    ? "relative min-h-screen overflow-hidden bg-[#ffffff] px-4 py-8 text-[#111827]"
+    : "relative min-h-screen overflow-hidden bg-[#000000] px-4 py-8 text-[#f5f5f5]";
+  const gridClassName = isLightTheme
+    ? "pointer-events-none absolute inset-0 opacity-[0.38] [background-image:linear-gradient(rgba(17,24,39,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(17,24,39,0.06)_1px,transparent_1px)] [background-size:14px_14px]"
+    : "pointer-events-none absolute inset-0 opacity-[0.09] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:14px_14px]";
+  const cardClassName = isLightTheme
+    ? "relative rounded-[26px] border border-[#e5e7eb] bg-[#ffffff]/95 p-6 shadow-[0_22px_60px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:p-7"
+    : "relative rounded-[26px] border border-[#1d1d1d] bg-[#090909]/95 p-6 shadow-[0_36px_90px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:p-7";
+  const authSwitchClassName = isLightTheme
+    ? "inline-flex rounded-full border border-[#d4d4d8] bg-[#f8fafc] p-1"
+    : "inline-flex rounded-full border border-[#2a2a2a] bg-[#0d0d0d] p-1";
+  const authSwitchInactiveClassName = isLightTheme
+    ? "text-[#6b7280] hover:text-[#111827]"
+    : "text-[#959595] hover:text-[#ececec]";
+  const themeSwitchClassName = isLightTheme
+    ? "inline-flex rounded-full border border-[#d4d4d8] bg-[#ffffff] p-1 shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
+    : "inline-flex rounded-full border border-[#2a2a2a] bg-[#0d0d0d] p-1 shadow-[0_8px_24px_rgba(0,0,0,0.4)]";
+  const themeSwitchInactiveClassName = isLightTheme
+    ? "text-[#6b7280] hover:text-[#111827]"
+    : "text-[#8f8f8f] hover:text-[#ececec]";
+  const inputClassName = isLightTheme
+    ? "h-11 w-full rounded-xl border border-[#d4d4d8] bg-[#ffffff] px-3 text-sm text-[#111827] outline-none placeholder:text-[#9ca3af] transition focus:border-[#ff8700] focus:shadow-[0_0_0_2px_rgba(255,135,0,0.18)]"
+    : "h-11 w-full rounded-xl border border-[#2a2a2a] bg-[#101010] px-3 text-sm text-[#f5f5f5] outline-none placeholder:text-[#6d6d6d] transition focus:border-[#ff8700] focus:shadow-[0_0_0_2px_rgba(255,135,0,0.22)]";
+  const eyeButtonClassName = isLightTheme
+    ? "grid h-11 w-11 place-items-center rounded-xl border border-[#d4d4d8] bg-[#ffffff] text-[#6b7280] transition hover:border-[#ff8700] hover:text-[#c26a00]"
+    : "grid h-11 w-11 place-items-center rounded-xl border border-[#2a2a2a] bg-[#101010] text-[#8a8a8a] transition hover:border-[#ff8700] hover:text-[#ffc168]";
+  const usernameWrapClassName = isLightTheme
+    ? "grid h-11 grid-cols-[auto_1fr] items-center gap-2 rounded-xl border border-[#d4d4d8] bg-[#ffffff] px-3"
+    : "grid h-11 grid-cols-[auto_1fr] items-center gap-2 rounded-xl border border-[#2a2a2a] bg-[#101010] px-3";
+  const usernameInputClassName = isLightTheme
+    ? "w-full bg-transparent text-sm text-[#111827] outline-none placeholder:text-[#9ca3af]"
+    : "w-full bg-transparent text-sm text-[#f5f5f5] outline-none placeholder:text-[#6d6d6d]";
+  const dividerClassName = isLightTheme ? "h-px flex-1 bg-[#e5e7eb]" : "h-px flex-1 bg-[#252525]";
+  const oauthButtonClassName = isLightTheme
+    ? "flex h-11 items-center justify-center gap-2 rounded-xl border border-[#d4d4d8] bg-[#ffffff] text-sm text-[#374151] transition hover:border-[#ff9d23] hover:text-[#c26a00]"
+    : "flex h-11 items-center justify-center gap-2 rounded-xl border border-[#2a2a2a] bg-[#101010] text-sm text-[#dbdbdb] transition hover:border-[#ff9d23] hover:text-[#ffd18a]";
+  const heroClassName = isLightTheme
+    ? "mb-8 text-center text-[34px] font-semibold leading-tight tracking-tight text-[#111827] sm:mb-10 sm:text-[56px]"
+    : "mb-8 text-center text-[34px] font-semibold leading-tight tracking-tight text-[#f5f5f5] sm:mb-10 sm:text-[56px]";
+
   return (
     <main className={pageClassName}>
       <div className={gridClassName} />
 
-      <div className="relative w-full max-w-[560px]">
-        <section className={cardClassName}>
-          <p className={sloganClassName}>AI时代的简历</p>
-          <header className="mb-6 flex items-center justify-between gap-3">
-            <p
-              className={`${pixelFont.className} bg-gradient-to-r from-[#ff7a1c] via-[#ff9d23] to-[#ffd166] bg-clip-text text-[11px] text-transparent`}
-            >
-              RESUMIO
-            </p>
-            <div className="flex items-center gap-2">
-              <div className={themeChipClassName}>
-                <button
-                  type="button"
-                  onClick={() => changeTheme("dark")}
-                  className={`rounded-full px-2.5 py-1 text-xs transition ${
-                    isLightTheme ? themeInactiveClassName : "bg-[#ff9d23] text-[#15110a]"
-                  }`}
-                >
-                  深色
-                </button>
-                <button
-                  type="button"
-                  onClick={() => changeTheme("light")}
-                  className={`rounded-full px-2.5 py-1 text-xs transition ${
-                    isLightTheme ? "bg-[#ff9d23] text-[#15110a]" : themeInactiveClassName
-                  }`}
-                >
-                  浅色
-                </button>
-              </div>
-              <div className={switchShellClassName}>
+      <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
+        <div className={themeSwitchClassName}>
+          <button
+            type="button"
+            onClick={() => changeTheme("dark")}
+            className={`rounded-full px-3 py-1 text-xs transition ${
+              isLightTheme
+                ? themeSwitchInactiveClassName
+                : "bg-[#ff9d23] text-[#15110a]"
+            }`}
+          >
+            深色
+          </button>
+          <button
+            type="button"
+            onClick={() => changeTheme("light")}
+            className={`rounded-full px-3 py-1 text-xs transition ${
+              isLightTheme
+                ? "bg-[#ff9d23] text-[#15110a]"
+                : themeSwitchInactiveClassName
+            }`}
+          >
+            浅色
+          </button>
+        </div>
+      </div>
+
+      <div className="relative z-10 flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center">
+        <h1 className={heroClassName}>AI时代的简历</h1>
+
+        <div className="w-full max-w-[560px]">
+          <section className={cardClassName}>
+            <header className="mb-6 flex items-center justify-between gap-3">
+              <p
+                className={`${pixelFont.className} bg-gradient-to-r from-[#ff7a1c] via-[#ff9d23] to-[#ffd166] bg-clip-text text-[11px] text-transparent`}
+              >
+                RESUMIO
+              </p>
+              <div className={authSwitchClassName}>
                 <Link
                   href="/login"
                   className={`rounded-full px-3 py-1 text-xs transition ${
-                    isLogin ? "bg-[#ff9d23] text-[#15110a]" : inactiveSwitchClassName
+                    isLogin
+                      ? "bg-[#ff9d23] text-[#15110a]"
+                      : authSwitchInactiveClassName
                   }`}
                 >
-                  鐧诲綍
+                  登录
                 </Link>
                 <Link
                   href="/register"
                   className={`rounded-full px-3 py-1 text-xs transition ${
-                    isLogin ? inactiveSwitchClassName : "bg-[#ff9d23] text-[#15110a]"
+                    isLogin
+                      ? authSwitchInactiveClassName
+                      : "bg-[#ff9d23] text-[#15110a]"
                   }`}
                 >
-                  娉ㄥ唽
+                  注册
                 </Link>
               </div>
+            </header>
+
+            <form className="space-y-3" onSubmit={submit}>
+              {isLogin ? (
+                <>
+                  <div className="relative">
+                    <UserRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8f8f8f]" />
+                    <input
+                      className={`${inputClassName} pl-9`}
+                      value={form.identifier}
+                      onChange={(event) => update("identifier", event.target.value)}
+                      autoComplete="username"
+                      placeholder="用户名或邮箱"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <div className="relative">
+                      <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8f8f8f]" />
+                      <input
+                        className={`${inputClassName} pl-9`}
+                        type={showPassword ? "text" : "password"}
+                        value={form.password}
+                        onChange={(event) => update("password", event.target.value)}
+                        autoComplete="current-password"
+                        placeholder="密码"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className={eyeButtonClassName}
+                      aria-label={showPassword ? "隐藏密码" : "显示密码"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={usernameWrapClassName}>
+                    <span className="text-xs text-[#ffb74f]">resumio.cn/</span>
+                    <input
+                      className={usernameInputClassName}
+                      value={form.username}
+                      onChange={(event) => update("username", event.target.value)}
+                      autoComplete="username"
+                      placeholder="用户名"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <div className="relative">
+                      <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8f8f8f]" />
+                      <input
+                        className={`${inputClassName} pl-9`}
+                        type={showPassword ? "text" : "password"}
+                        value={form.password}
+                        onChange={(event) => update("password", event.target.value)}
+                        autoComplete="new-password"
+                        placeholder="设置密码（至少 8 位）"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className={eyeButtonClassName}
+                      aria-label={showPassword ? "隐藏密码" : "显示密码"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <div className="relative">
+                      <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8f8f8f]" />
+                      <input
+                        className={`${inputClassName} pl-9`}
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={form.confirmPassword}
+                        onChange={(event) =>
+                          update("confirmPassword", event.target.value)
+                        }
+                        autoComplete="new-password"
+                        placeholder="确认密码"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      className={eyeButtonClassName}
+                      aria-label={showConfirmPassword ? "隐藏密码" : "显示密码"}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {error ? <p className="text-sm text-[#ff6464]">{error}</p> : null}
+              {message ? <p className="text-sm text-[#68d496]">{message}</p> : null}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="h-11 w-full rounded-xl border border-[#ff9d23] bg-[linear-gradient(180deg,#ffb145,#ff8b12)] text-sm font-semibold text-[#181005] transition hover:bg-[linear-gradient(180deg,#ffba56,#ff981f)] disabled:opacity-60"
+              >
+                {submitting ? "处理中..." : isLogin ? "登录" : "注册"}
+              </button>
+            </form>
+
+            <div className="my-5 flex items-center gap-3 text-xs text-[#6f6f6f]">
+              <span className={dividerClassName} />
+              <span>或使用第三方登录</span>
+              <span className={dividerClassName} />
             </div>
-          </header>
-          <form className="space-y-3" onSubmit={submit}>
-            {isLogin ? (
-              <>
-                <div className="relative">
-                  <UserRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8f8f8f]" />
-                  <input
-                    className={`${inputClassName} pl-9`}
-                    value={form.identifier}
-                    onChange={(event) => update("identifier", event.target.value)}
-                    autoComplete="username"
-                    placeholder="鐢ㄦ埛鍚嶆垨閭"
-                  />
-                </div>
 
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <div className="relative">
-                    <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8f8f8f]" />
-                    <input
-                      className={`${inputClassName} pl-9`}
-                      type={showPassword ? "text" : "password"}
-                      value={form.password}
-                      onChange={(event) => update("password", event.target.value)}
-                      autoComplete="current-password"
-                      placeholder="瀵嗙爜"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className={eyeButtonClassName}
-                    aria-label={showPassword ? "闅愯棌瀵嗙爜" : "鏄剧ず瀵嗙爜"}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className={usernameWrapClassName}>
-                  <span className="text-xs text-[#ffb74f]">resumio.cn/</span>
-                  <input
-                    className={usernameInputClassName}
-                    value={form.username}
-                    onChange={(event) => update("username", event.target.value)}
-                    autoComplete="username"
-                    placeholder="用户名"
-                  />
-                </div>
-
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <div className="relative">
-                    <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8f8f8f]" />
-                    <input
-                      className={`${inputClassName} pl-9`}
-                      type={showPassword ? "text" : "password"}
-                      value={form.password}
-                      onChange={(event) => update("password", event.target.value)}
-                      autoComplete="new-password"
-                      placeholder="璁剧疆瀵嗙爜锛堣嚦灏?8 浣嶏級"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className={eyeButtonClassName}
-                    aria-label={showPassword ? "闅愯棌瀵嗙爜" : "鏄剧ず瀵嗙爜"}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <div className="relative">
-                    <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8f8f8f]" />
-                    <input
-                      className={`${inputClassName} pl-9`}
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={form.confirmPassword}
-                      onChange={(event) => update("confirmPassword", event.target.value)}
-                      autoComplete="new-password"
-                      placeholder="纭瀵嗙爜"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    className={eyeButtonClassName}
-                    aria-label={showConfirmPassword ? "闅愯棌瀵嗙爜" : "鏄剧ず瀵嗙爜"}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </>
-            )}
-
-            {error ? <p className="text-sm text-[#ff6464]">{error}</p> : null}
-            {message ? <p className="text-sm text-[#68d496]">{message}</p> : null}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="h-11 w-full rounded-xl border border-[#ff9d23] bg-[linear-gradient(180deg,#ffb145,#ff8b12)] text-sm font-semibold text-[#181005] transition hover:bg-[linear-gradient(180deg,#ffba56,#ff981f)] disabled:opacity-60"
-            >
-              {submitting ? "澶勭悊涓?.." : isLogin ? "鐧诲綍" : "娉ㄥ唽"}
-            </button>
-          </form>
-
-          <div className="my-5 flex items-center gap-3 text-xs text-[#6f6f6f]">
-            <span className={dividerClassName} />
-            <span>鎴栦娇鐢ㄧ涓夋柟鐧诲綍</span>
-            <span className={dividerClassName} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <a
-              href="/api/auth/oauth/github/start"
-              className={oauthButtonClassName}
-            >
-              <Github className="h-4 w-4" />
-              GitHub
-            </a>
-            <a
-              href="/api/auth/oauth/google/start"
-              className={oauthButtonClassName}
-            >
-              <GoogleIcon />
-              Google
-            </a>
-          </div>
-        </section>
+            <div className="grid grid-cols-2 gap-2">
+              <a href="/api/auth/oauth/github/start" className={oauthButtonClassName}>
+                <Github className="h-4 w-4" />
+                GitHub
+              </a>
+              <a href="/api/auth/oauth/google/start" className={oauthButtonClassName}>
+                <GoogleIcon />
+                Google
+              </a>
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   );
 }
-
 
