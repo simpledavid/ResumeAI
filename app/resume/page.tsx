@@ -16,7 +16,6 @@ import {
   Briefcase,
   FolderKanban,
   GraduationCap,
-  Link as LinkIcon,
   LogOut,
   Mail,
   MapPin,
@@ -123,7 +122,9 @@ type Resume = {
     email: string;
     phone: string;
     location: string;
-    website: string;
+    age: string;
+    gender: string;
+    jobTarget: string;
     summary: string;
     links: { label: string; url: string }[];
   };
@@ -197,7 +198,9 @@ type BasicsInput = {
   email: string;
   phone: string;
   location: string;
-  website: string;
+  age: string;
+  gender: string;
+  jobTarget: string;
   summary: string;
 };
 
@@ -216,6 +219,13 @@ type EducationLine = {
 type AiLinks = {
   tools: string[];
   products: string[];
+};
+
+type UrlMeta = {
+  href: string;
+  label: string;
+  iconPrimary: string;
+  iconFallback: string;
 };
 
 const createEmptyExperienceItem = (): Resume["experience"][number] => ({
@@ -243,7 +253,9 @@ const emptyResume: Resume = {
     email: "",
     phone: "",
     location: "",
-    website: "",
+    age: "",
+    gender: "",
+    jobTarget: "",
     summary: "",
     links: [],
   },
@@ -259,7 +271,9 @@ const emptyBasics: BasicsInput = {
   email: "",
   phone: "",
   location: "",
-  website: "",
+  age: "",
+  gender: "",
+  jobTarget: "",
   summary: "",
 };
 
@@ -288,6 +302,11 @@ const parseLineList = (value?: string) =>
         .filter(Boolean)
     : [];
 
+const normalizeStringList = (values?: string[]) =>
+  Array.isArray(values)
+    ? values.map((value) => value.trim()).filter(Boolean)
+    : [];
+
 const normalizeAiLinkArray = (values?: string[]) =>
   Array.isArray(values)
     ? values.map((value) => value.trim()).filter(Boolean)
@@ -300,17 +319,19 @@ const normalizeUrlValue = (value: string) => {
   return `https://${trimmed}`;
 };
 
-const parseUrlMeta = (value: string) => {
+const parseUrlMeta = (value: string): UrlMeta | null => {
   const normalized = normalizeUrlValue(value);
   if (!normalized) return null;
   try {
     const parsed = new URL(normalized);
     const host = parsed.hostname.replace(/^www\./i, "");
+    const origin = `${parsed.protocol}//${parsed.hostname}`;
     return {
       href: parsed.toString(),
       label: host || parsed.hostname,
-      favicon: `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
-        `${parsed.protocol}//${parsed.hostname}`,
+      iconPrimary: `${origin}/favicon.ico`,
+      iconFallback: `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
+        origin,
       )}`,
     };
   } catch {
@@ -361,6 +382,7 @@ const normalizeResume = (resume: Resume): Resume => {
 
   return {
     ...resume,
+    skills: normalizeStringList(resume.skills),
     aiTools: mergedAiTools.join("\n"),
     aiProducts: mergedAiProducts.join("\n"),
     aiToolLinks: mergedAiTools,
@@ -382,12 +404,6 @@ const formatEducationLine = (value: EducationLine) => {
   const left = [value.school, value.major].filter(Boolean).join(" - ");
   return [left, value.period].filter(Boolean).join("  ");
 };
-
-const parseLines = (value: string) =>
-  value
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean);
 
 const formatExperience = (values: Resume["experience"]) =>
   values
@@ -520,12 +536,39 @@ function EditableBlock({
   );
 }
 
+function SiteIcon({
+  meta,
+}: {
+  meta: UrlMeta;
+}) {
+  const [src, setSrc] = useState(meta.iconPrimary);
+
+  useEffect(() => {
+    setSrc(meta.iconPrimary);
+  }, [meta.iconPrimary]);
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={`${meta.label} icon`}
+      className="h-4 w-4 shrink-0 rounded-sm"
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => {
+        setSrc((prev) => (prev === meta.iconFallback ? prev : meta.iconFallback));
+      }}
+    />
+  );
+}
+
 export default function ResumeEditorPage({ publicUsername }: ResumeEditorPageProps) {
   const router = useRouter();
   const profileUsername = publicUsername?.trim().toLowerCase() ?? "";
   const isPublicRoute = profileUsername.length > 0;
   const [basics, setBasics] = useState<BasicsInput>(emptyBasics);
   const [text, setText] = useState<TextSections>(emptyTextSections);
+  const [skillItems, setSkillItems] = useState<string[]>([]);
   const [educationLine, setEducationLine] =
     useState<EducationLine>(emptyEducationLine);
   const [aiLinks, setAiLinks] = useState<AiLinks>(emptyAiLinks);
@@ -589,6 +632,23 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
       ...prev,
       [field]: value,
     }));
+  };
+
+  const updateSkillItem = (index: number, value: string) => {
+    if (isReadonly) return;
+    setSkillItems((prev) =>
+      prev.map((item, itemIndex) => (itemIndex === index ? value : item)),
+    );
+  };
+
+  const addSkillItem = () => {
+    if (isReadonly) return;
+    setSkillItems((prev) => [...prev, ""]);
+  };
+
+  const removeSkillItem = (index: number) => {
+    if (isReadonly) return;
+    setSkillItems((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
   };
 
   const updateAiLink = (field: keyof AiLinks, index: number, value: string) => {
@@ -708,10 +768,13 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
       email: normalizedResume.basics.email ?? "",
       phone: normalizedResume.basics.phone ?? "",
       location: normalizedResume.basics.location ?? "",
-      website: normalizedResume.basics.website ?? "",
+      age: normalizedResume.basics.age ?? "",
+      gender: normalizedResume.basics.gender ?? "",
+      jobTarget: normalizedResume.basics.jobTarget ?? "",
       summary: normalizedResume.basics.summary ?? "",
     });
     setText(resumeToText(normalizedResume));
+    setSkillItems(normalizeStringList(normalizedResume.skills));
     const primaryEducation = normalizedResume.education?.[0];
     if (primaryEducation) {
       setEducationLine({
@@ -751,7 +814,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         ...basics,
         links: structuredResume.basics.links ?? [],
       },
-      skills: parseLines(text.skills),
+      skills: normalizeStringList(skillItems),
       education: hasEducation
         ? [
             {
@@ -1031,10 +1094,10 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
       educationLine.period,
     ].some(hasValue);
     const hasTextContent = [
-      text.skills,
       text.experience,
       text.projects,
     ].some(hasValue);
+    const hasSkillsContent = skillItems.some(hasValue);
     const hasAiContent = [...aiLinks.tools, ...aiLinks.products].some(hasValue);
     const hasExperienceContent = structuredResume.experience.some(
       (item) =>
@@ -1069,6 +1132,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     const hasUserContent =
       hasBasicsContent ||
       hasEducationLineContent ||
+      hasSkillsContent ||
       hasTextContent ||
       hasAiContent ||
       hasExperienceContent ||
@@ -1415,6 +1479,26 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   />
                   </div>
                   <div className="flex items-center gap-1">
+                    <span className="text-[11px] text-slate-500">性别</span>
+                    <EditableBlock
+                    value={basics.gender}
+                    onChange={(value) => updateBasics("gender", value)}
+                    placeholder="性别"
+                    className="text-xs"
+                    singleLine
+                  />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] text-slate-500">年龄</span>
+                    <EditableBlock
+                    value={basics.age}
+                    onChange={(value) => updateBasics("age", value)}
+                    placeholder="年龄"
+                    className="text-xs"
+                    singleLine
+                  />
+                  </div>
+                  <div className="flex items-center gap-1">
                     <Mail className="h-3.5 w-3.5" style={{ color: "var(--accent)" }} aria-hidden />
                     <EditableBlock
                     value={basics.email}
@@ -1425,15 +1509,11 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   />
                   </div>
                   <div className="flex items-center gap-1">
-                    <LinkIcon
-                      className="h-3.5 w-3.5"
-                      style={{ color: "var(--accent)" }}
-                      aria-hidden
-                    />
+                    <span className="text-[11px] text-slate-500">求职</span>
                     <EditableBlock
-                      value={basics.website}
-                      onChange={(value) => updateBasics("website", value)}
-                      placeholder="个人链接"
+                      value={basics.jobTarget}
+                      onChange={(value) => updateBasics("jobTarget", value)}
+                      placeholder="求职意向"
                       className="text-xs"
                       singleLine
                     />
@@ -1667,12 +1747,46 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <EditableBlock
-              value={text.skills}
-              onChange={(value) => updateText("skills", value)}
-              placeholder="直接写技能清单即可"
-              className="min-h-[160px]"
-            />
+            <div className="space-y-2">
+              {(canEdit ? skillItems : skillItems.filter((item) => item.trim().length > 0)).map(
+                (item, index) => (
+                  <div key={`skill-${index}`} className="flex items-center gap-2">
+                    {canEdit ? (
+                      <input
+                        value={item}
+                        onChange={(event) => updateSkillItem(index, event.target.value)}
+                        placeholder="例如：C++ / Python"
+                        className="min-w-0 flex-1 rounded border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                      />
+                    ) : (
+                      <span className="rounded border border-slate-200 bg-white px-2 py-1 text-sm text-slate-700">
+                        {item}
+                      </span>
+                    )}
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => removeSkillItem(index)}
+                        data-export="exclude"
+                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-500 transition hover:border-slate-400"
+                      >
+                        删除
+                      </button>
+                    ) : null}
+                  </div>
+                ),
+              )}
+              {canEdit ? (
+                <button
+                  type="button"
+                  onClick={addSkillItem}
+                  data-export="exclude"
+                  className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
+                >
+                  增加
+                </button>
+              ) : null}
+            </div>
           </Section>
 
           <Section
@@ -1689,13 +1803,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   <div key={`ai-tool-${index}`} className="flex items-center gap-2">
                     <div className="flex min-w-0 flex-1 items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1.5">
                       {meta ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={meta.favicon}
-                          alt={`${meta.label} icon`}
-                          className="h-4 w-4 shrink-0 rounded-sm"
-                          loading="lazy"
-                        />
+                        <SiteIcon meta={meta} />
                       ) : (
                         <span className="h-4 w-4 shrink-0 rounded-sm bg-slate-200" />
                       )}
@@ -1749,7 +1857,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
           </Section>
 
           <Section
-            title="AI产品"
+            title="我的产品"
             icon={Sparkles}
             className={template.sectionSpacing}
             titleClassName={template.sectionTitleClass}
@@ -1762,13 +1870,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   <div key={`ai-product-${index}`} className="flex items-center gap-2">
                     <div className="flex min-w-0 flex-1 items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1.5">
                       {meta ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={meta.favicon}
-                          alt={`${meta.label} icon`}
-                          className="h-4 w-4 shrink-0 rounded-sm"
-                          loading="lazy"
-                        />
+                        <SiteIcon meta={meta} />
                       ) : (
                         <span className="h-4 w-4 shrink-0 rounded-sm bg-slate-200" />
                       )}

@@ -5,13 +5,13 @@ const DAILY_LIMIT = 30;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const ipBuckets = new Map<string, { count: number; resetAt: number }>();
 
-const createZhipuClient = () => {
-  const apiKey = process.env.ZHIPU_API_KEY;
+const createDeepSeekClient = () => {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) return null;
 
   return new OpenAI({
     apiKey,
-    baseURL: process.env.ZHIPU_BASE_URL ?? "https://open.bigmodel.cn/api/paas/v4",
+    baseURL: process.env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com",
   });
 };
 
@@ -37,7 +37,9 @@ const ResumeSchema = z.object({
     email: z.string(),
     phone: z.string(),
     location: z.string(),
-    website: z.string(),
+    age: z.string().optional(),
+    gender: z.string().optional(),
+    jobTarget: z.string().optional(),
     summary: z.string(),
     links: z.array(
       z.object({
@@ -100,7 +102,9 @@ const ResumePatchSchema = z.object({
       email: z.string().optional(),
       phone: z.string().optional(),
       location: z.string().optional(),
-      website: z.string().optional(),
+      age: z.string().optional(),
+      gender: z.string().optional(),
+      jobTarget: z.string().optional(),
       summary: z.string().optional(),
       links: z
         .array(
@@ -165,7 +169,9 @@ const emptyResume = () => ({
     email: "",
     phone: "",
     location: "",
-    website: "",
+    age: "",
+    gender: "",
+    jobTarget: "",
     summary: "",
     links: [],
   },
@@ -325,7 +331,9 @@ const mergeResume = (base: Resume, patch: ResumePatch): Resume => {
       email: mergeString(base.basics.email, basicsPatch?.email),
       phone: mergeString(base.basics.phone, basicsPatch?.phone),
       location: mergeString(base.basics.location, basicsPatch?.location),
-      website: mergeString(base.basics.website, basicsPatch?.website),
+      age: mergeString(base.basics.age ?? "", basicsPatch?.age),
+      gender: mergeString(base.basics.gender ?? "", basicsPatch?.gender),
+      jobTarget: mergeString(base.basics.jobTarget ?? "", basicsPatch?.jobTarget),
       summary: mergeString(base.basics.summary, basicsPatch?.summary),
       links: normalizeLinks(basicsPatch?.links) ?? base.basics.links,
     },
@@ -428,17 +436,18 @@ export async function POST(request: Request) {
       { role: "user" as const, content: userPrompt },
     ];
 
-    const model = process.env.ZHIPU_MODEL ?? "glm-4.7-flash";
-    const zhipu = createZhipuClient();
+    // DeepSeek official aliases deepseek-chat/deepseek-reasoner point to latest models.
+    const model = process.env.DEEPSEEK_MODEL ?? "deepseek-chat";
+    const deepseek = createDeepSeekClient();
 
-    if (!zhipu) {
+    if (!deepseek) {
       return Response.json(
-        { error: "Missing ZHIPU_API_KEY. Set it in .dev.vars or Cloudflare Secrets." },
+        { error: "Missing DEEPSEEK_API_KEY. Set it in .dev.vars or Cloudflare Secrets." },
         { status: 500 }
       );
     }
 
-    const completion = await zhipu.chat.completions.create({
+    const completion = await deepseek.chat.completions.create({
       model,
       messages: chatMessages,
       temperature: 0.2,
