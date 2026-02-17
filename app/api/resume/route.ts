@@ -75,7 +75,7 @@ export async function PUT(request: Request) {
     const templateId =
       typeof body.templateId === "string" && body.templateId.length <= 32
         ? body.templateId
-        : "classic";
+        : "minimal";
     const now = nowUnix();
 
     await db

@@ -602,7 +602,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
   const [savedAt, setSavedAt] = useState("");
   const [error, setError] = useState("");
   const [assistantMessage, setAssistantMessage] = useState("");
-  const [templateId, setTemplateId] = useState<TemplateId>("classic");
+  const [templateId, setTemplateId] = useState<TemplateId>("minimal");
   const [canEdit, setCanEdit] = useState(!isPublicRoute);
   const resumeRef = useRef<HTMLDivElement | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);

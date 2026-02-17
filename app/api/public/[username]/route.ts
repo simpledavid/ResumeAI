@@ -49,7 +49,7 @@ export async function GET(
       },
       resume,
       avatarUrl: row.avatar_url ?? "",
-      templateId: row.template_id ?? "classic",
+      templateId: row.template_id ?? "minimal",
       updatedAt: row.updated_at ?? null,
     });
   } catch {
