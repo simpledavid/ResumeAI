@@ -67,6 +67,11 @@ const prepareWorkerFile = async () => {
       /^.*BucketCachePurge.*$/m,
       ""
     )
+    // Pages runtime does not set this flag for OpenNext, so static assets must be enabled explicitly.
+    .replace(
+      "export default {",
+      "globalThis.__ASSETS_RUN_WORKER_FIRST__ = true;\n\nexport default {"
+    )
     .replaceAll("./.build/", "./build/");
 
   await fs.writeFile(path.join(pagesOutDir, "_worker.js"), patchedWorker, "utf8");
