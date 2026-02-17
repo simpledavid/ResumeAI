@@ -9,6 +9,10 @@ binding = "DB"
 database_name = "resumeai-dev"
 database_id = "preview"
 
+[[r2_buckets]]
+binding = "RESUME_ASSETS"
+bucket_name = "resumio"
+
 [env.production]
 compatibility_date = "2026-02-16"
 compatibility_flags = ["nodejs_compat"]
@@ -17,8 +21,13 @@ compatibility_flags = ["nodejs_compat"]
 NODE_ENV = "production"
 ZHIPU_BASE_URL = "https://open.bigmodel.cn/api/paas/v4"
 ZHIPU_MODEL = "glm-4.7-flash"
+R2_PUBLIC_BASE_URL = "https://e34e132f71738a539b94e36f2eeddaf2.r2.cloudflarestorage.com/resumio"
 
 [[env.production.d1_databases]]
 database_id = "f45c484f-8178-409b-9b91-70fdee561767"
 binding = "DB"
 database_name = "DB"
+
+[[env.production.r2_buckets]]
+binding = "RESUME_ASSETS"
+bucket_name = "resumio"

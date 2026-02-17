@@ -420,6 +420,7 @@ export default function Home() {
     useState<EducationLine>(emptyEducationLine);
   const [structuredResume, setStructuredResume] = useState<Resume>(emptyResume);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
@@ -544,16 +545,46 @@ export default function Home() {
     }
   };
 
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setAvatarUrl(reader.result);
+
+    setUploadingAvatar(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        url?: string;
+      };
+
+      if (!response.ok || typeof data.url !== "string") {
+        throw new Error(data.error ?? "Failed to upload avatar image.");
       }
-    };
-    reader.readAsDataURL(file);
+
+      setAvatarUrl(data.url);
+    } catch {
+      // Fallback to local preview if cloud upload is unavailable.
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          setAvatarUrl(reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+      setError("Avatar upload failed. Using local preview instead.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+
     event.currentTarget.value = "";
   };
 
@@ -1065,6 +1096,7 @@ export default function Home() {
                   id="avatar-upload"
                   type="file"
                   accept="image/*"
+                  disabled={uploadingAvatar}
                   className="hidden"
                   onChange={handleAvatarChange}
                 />
