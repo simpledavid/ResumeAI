@@ -3,6 +3,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 type R2BucketLike = {
+  get: (key: string) => Promise<R2ObjectLike | null>;
   put: (
     key: string,
     value: ArrayBuffer,
@@ -11,6 +12,16 @@ type R2BucketLike = {
       customMetadata?: Record<string, string>;
     },
   ) => Promise<unknown>;
+};
+
+type R2ObjectLike = {
+  body: ReadableStream | null;
+  etag?: string;
+  httpMetadata?: {
+    contentType?: string;
+    cacheControl?: string;
+  };
+  writeHttpMetadata?: (headers: Headers) => void;
 };
 
 const MIME_EXTENSION_MAP: Record<string, string> = {
@@ -37,6 +48,63 @@ const buildPublicUrl = (baseUrl: string, key: string) => {
   return `${normalizedBase}/${encodedKey}`;
 };
 
+const buildInternalUrl = (key: string) => `/api/upload?key=${encodeURIComponent(key)}`;
+
+const isUsablePublicBaseUrl = (baseUrl: string) =>
+  !baseUrl.includes(".r2.cloudflarestorage.com");
+
+const getBucket = async () => {
+  const { env } = await getCloudflareContext({ async: true });
+  return (env as { RESUME_ASSETS?: R2BucketLike }).RESUME_ASSETS;
+};
+
+const isSafeObjectKey = (key: string) =>
+  key.length > 0 &&
+  key.length <= 512 &&
+  !key.includes("..") &&
+  !key.startsWith("/") &&
+  !key.startsWith("\\");
+
+export async function GET(request: Request) {
+  try {
+    const key = new URL(request.url).searchParams.get("key")?.trim() ?? "";
+    if (!isSafeObjectKey(key)) {
+      return Response.json({ error: "Invalid key." }, { status: 400 });
+    }
+
+    const bucket = await getBucket();
+    if (!bucket) {
+      return Response.json(
+        { error: "R2 bucket binding RESUME_ASSETS is not configured." },
+        { status: 500 },
+      );
+    }
+
+    const object = await bucket.get(key);
+    if (!object?.body) {
+      return Response.json({ error: "File not found." }, { status: 404 });
+    }
+
+    const headers = new Headers();
+    object.writeHttpMetadata?.(headers);
+
+    if (!headers.has("content-type")) {
+      headers.set("content-type", "application/octet-stream");
+    }
+    if (!headers.has("cache-control")) {
+      headers.set("cache-control", "public, max-age=31536000, immutable");
+    }
+    if (object.etag) {
+      headers.set("etag", object.etag);
+    }
+
+    return new Response(object.body, { status: 200, headers });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to load image.";
+    return Response.json({ error: message }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
@@ -54,8 +122,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Image size exceeds 5MB limit." }, { status: 400 });
     }
 
-    const { env } = await getCloudflareContext({ async: true });
-    const bucket = (env as { RESUME_ASSETS?: R2BucketLike }).RESUME_ASSETS;
+    const bucket = await getBucket();
 
     if (!bucket) {
       return Response.json(
@@ -78,12 +145,15 @@ export async function POST(request: Request) {
     });
 
     const publicBaseUrl = process.env.R2_PUBLIC_BASE_URL?.trim();
-    if (!publicBaseUrl) {
-      return Response.json({ key }, { status: 201 });
+    if (publicBaseUrl && isUsablePublicBaseUrl(publicBaseUrl)) {
+      return Response.json(
+        { key, url: buildPublicUrl(publicBaseUrl, key) },
+        { status: 201 },
+      );
     }
 
     return Response.json(
-      { key, url: buildPublicUrl(publicBaseUrl, key) },
+      { key, url: buildInternalUrl(key) },
       { status: 201 },
     );
   } catch (error) {
