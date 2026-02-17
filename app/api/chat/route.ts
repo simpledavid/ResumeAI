@@ -78,6 +78,10 @@ const ResumeSchema = z.object({
       highlights: z.array(z.string()),
     })
   ),
+  aiTools: z.string().optional(),
+  aiProducts: z.string().optional(),
+  aiToolLinks: z.array(z.string()).optional(),
+  aiProductLinks: z.array(z.string()).optional(),
 });
 
 const ChatResponseSchema = z.object({
@@ -146,6 +150,10 @@ const ResumePatchSchema = z.object({
       })
     )
     .optional(),
+  aiTools: z.string().optional(),
+  aiProducts: z.string().optional(),
+  aiToolLinks: z.array(z.string()).optional(),
+  aiProductLinks: z.array(z.string()).optional(),
 });
 
 type ResumePatch = z.infer<typeof ResumePatchSchema>;
@@ -165,6 +173,10 @@ const emptyResume = () => ({
   experience: [],
   education: [],
   projects: [],
+  aiTools: "",
+  aiProducts: "",
+  aiToolLinks: [],
+  aiProductLinks: [],
 });
 
 const extractFirstJsonObject = (text: string) => {
@@ -321,6 +333,12 @@ const mergeResume = (base: Resume, patch: ResumePatch): Resume => {
     experience: normalizeExperience(patch.experience) ?? base.experience,
     education: normalizeEducation(patch.education) ?? base.education,
     projects: normalizeProjects(patch.projects) ?? base.projects,
+    aiTools: mergeString(base.aiTools ?? "", patch.aiTools),
+    aiProducts: mergeString(base.aiProducts ?? "", patch.aiProducts),
+    aiToolLinks:
+      normalizeStringArray(patch.aiToolLinks) ?? (base.aiToolLinks ?? []),
+    aiProductLinks:
+      normalizeStringArray(patch.aiProductLinks) ?? (base.aiProductLinks ?? []),
   };
   return merged;
 };

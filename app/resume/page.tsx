@@ -155,6 +155,8 @@ type Resume = {
   }[];
   aiTools?: string;
   aiProducts?: string;
+  aiToolLinks?: string[];
+  aiProductLinks?: string[];
 };
 
 type ChatApiResponse = {
@@ -211,9 +213,9 @@ type EducationLine = {
   period: string;
 };
 
-type AiLines = {
-  tools: string;
-  products: string;
+type AiLinks = {
+  tools: string[];
+  products: string[];
 };
 
 const createEmptyExperienceItem = (): Resume["experience"][number] => ({
@@ -273,9 +275,47 @@ const emptyEducationLine: EducationLine = {
   period: "",
 };
 
-const emptyAiLines: AiLines = {
-  tools: "",
-  products: "",
+const emptyAiLinks: AiLinks = {
+  tools: [],
+  products: [],
+};
+
+const parseLineList = (value?: string) =>
+  typeof value === "string"
+    ? value
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+    : [];
+
+const normalizeAiLinkArray = (values?: string[]) =>
+  Array.isArray(values)
+    ? values.map((value) => value.trim()).filter(Boolean)
+    : [];
+
+const normalizeUrlValue = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+};
+
+const parseUrlMeta = (value: string) => {
+  const normalized = normalizeUrlValue(value);
+  if (!normalized) return null;
+  try {
+    const parsed = new URL(normalized);
+    const host = parsed.hostname.replace(/^www\./i, "");
+    return {
+      href: parsed.toString(),
+      label: host || parsed.hostname,
+      favicon: `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
+        `${parsed.protocol}//${parsed.hostname}`,
+      )}`,
+    };
+  } catch {
+    return null;
+  }
 };
 
 const normalizeResume = (resume: Resume): Resume => {
@@ -309,10 +349,22 @@ const normalizeResume = (resume: Resume): Resume => {
         }))
       : [createEmptyProjectItem()];
 
+  const aiToolLinks = normalizeAiLinkArray(resume.aiToolLinks);
+  const aiProductLinks = normalizeAiLinkArray(resume.aiProductLinks);
+  const aiToolsText = typeof resume.aiTools === "string" ? resume.aiTools : "";
+  const aiProductsText =
+    typeof resume.aiProducts === "string" ? resume.aiProducts : "";
+  const mergedAiTools =
+    aiToolLinks.length > 0 ? aiToolLinks : parseLineList(aiToolsText);
+  const mergedAiProducts =
+    aiProductLinks.length > 0 ? aiProductLinks : parseLineList(aiProductsText);
+
   return {
     ...resume,
-    aiTools: typeof resume.aiTools === "string" ? resume.aiTools : "",
-    aiProducts: typeof resume.aiProducts === "string" ? resume.aiProducts : "",
+    aiTools: mergedAiTools.join("\n"),
+    aiProducts: mergedAiProducts.join("\n"),
+    aiToolLinks: mergedAiTools,
+    aiProductLinks: mergedAiProducts,
     experience,
     projects,
   };
@@ -476,7 +528,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
   const [text, setText] = useState<TextSections>(emptyTextSections);
   const [educationLine, setEducationLine] =
     useState<EducationLine>(emptyEducationLine);
-  const [aiLines, setAiLines] = useState<AiLines>(emptyAiLines);
+  const [aiLinks, setAiLinks] = useState<AiLinks>(emptyAiLinks);
   const [structuredResume, setStructuredResume] = useState<Resume>(emptyResume);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -539,11 +591,39 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     }));
   };
 
-  const updateAiLine = (field: keyof AiLines, value: string) => {
+  const updateAiLink = (field: keyof AiLinks, index: number, value: string) => {
     if (isReadonly) return;
-    setAiLines((prev) => ({
+    setAiLinks((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: prev[field].map((item, itemIndex) =>
+        itemIndex === index ? value : item,
+      ),
+    }));
+  };
+
+  const addAiLink = (field: keyof AiLinks) => {
+    if (isReadonly) return;
+    setAiLinks((prev) => ({
+      ...prev,
+      [field]: [...prev[field], ""],
+    }));
+  };
+
+  const removeAiLink = (field: keyof AiLinks, index: number) => {
+    if (isReadonly) return;
+    setAiLinks((prev) => ({
+      ...prev,
+      [field]: prev[field].filter((_, itemIndex) => itemIndex !== index),
+    }));
+  };
+
+  const normalizeAiLinkItem = (field: keyof AiLinks, index: number) => {
+    if (isReadonly) return;
+    setAiLinks((prev) => ({
+      ...prev,
+      [field]: prev[field].map((item, itemIndex) =>
+        itemIndex === index ? normalizeUrlValue(item) : item,
+      ),
     }));
   };
 
@@ -589,12 +669,34 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     }));
   };
 
+  const removeExperience = (index: number) => {
+    if (isReadonly) return;
+    setStructuredResume((prev) => {
+      const next = prev.experience.filter((_, itemIndex) => itemIndex !== index);
+      return {
+        ...prev,
+        experience: next.length > 0 ? next : [createEmptyExperienceItem()],
+      };
+    });
+  };
+
   const addProject = () => {
     if (isReadonly) return;
     setStructuredResume((prev) => ({
       ...prev,
       projects: [...prev.projects, createEmptyProjectItem()],
     }));
+  };
+
+  const removeProject = (index: number) => {
+    if (isReadonly) return;
+    setStructuredResume((prev) => {
+      const next = prev.projects.filter((_, itemIndex) => itemIndex !== index);
+      return {
+        ...prev,
+        projects: next.length > 0 ? next : [createEmptyProjectItem()],
+      };
+    });
   };
 
   const applyResume = (resume: Resume) => {
@@ -623,19 +725,27 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     } else {
       setEducationLine(emptyEducationLine);
     }
-    setAiLines({
-      tools: normalizedResume.aiTools ?? "",
-      products: normalizedResume.aiProducts ?? "",
+    setAiLinks({
+      tools: normalizeAiLinkArray(normalizedResume.aiToolLinks),
+      products: normalizeAiLinkArray(normalizedResume.aiProductLinks),
     });
   };
 
   const buildResumePayload = (): Resume => {
     const hasEducation =
       educationLine.school || educationLine.major || educationLine.period;
+    const normalizedAiTools = aiLinks.tools
+      .map((item) => normalizeUrlValue(item))
+      .filter(Boolean);
+    const normalizedAiProducts = aiLinks.products
+      .map((item) => normalizeUrlValue(item))
+      .filter(Boolean);
     return {
       ...structuredResume,
-      aiTools: aiLines.tools,
-      aiProducts: aiLines.products,
+      aiTools: normalizedAiTools.join("\n"),
+      aiProducts: normalizedAiProducts.join("\n"),
+      aiToolLinks: normalizedAiTools,
+      aiProductLinks: normalizedAiProducts,
       basics: {
         ...structuredResume.basics,
         ...basics,
@@ -925,7 +1035,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
       text.experience,
       text.projects,
     ].some(hasValue);
-    const hasAiContent = [aiLines.tools, aiLines.products].some(hasValue);
+    const hasAiContent = [...aiLinks.tools, ...aiLinks.products].some(hasValue);
     const hasExperienceContent = structuredResume.experience.some(
       (item) =>
         [
@@ -1408,26 +1518,38 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                               singleLine
                             />
                           </div>
-                          <div className="flex items-baseline gap-1 text-xs text-slate-600">
-                            <EditableBlock
-                              value={item.startDate}
-                              onChange={(value) =>
-                                updateExperienceField(index, "startDate", value)
-                              }
-                              placeholder="开始"
-                              className="min-w-[52px] text-right text-xs text-slate-600"
-                              singleLine
-                            />
-                            <span className="text-slate-400">-</span>
-                            <EditableBlock
-                              value={item.endDate}
-                              onChange={(value) =>
-                                updateExperienceField(index, "endDate", value)
-                              }
-                              placeholder="结束"
-                              className="min-w-[52px] text-right text-xs text-slate-600"
-                              singleLine
-                            />
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-baseline gap-1 text-xs text-slate-600">
+                              <EditableBlock
+                                value={item.startDate}
+                                onChange={(value) =>
+                                  updateExperienceField(index, "startDate", value)
+                                }
+                                placeholder="开始"
+                                className="min-w-[52px] text-right text-xs text-slate-600"
+                                singleLine
+                              />
+                              <span className="text-slate-400">-</span>
+                              <EditableBlock
+                                value={item.endDate}
+                                onChange={(value) =>
+                                  updateExperienceField(index, "endDate", value)
+                                }
+                                placeholder="结束"
+                                className="min-w-[52px] text-right text-xs text-slate-600"
+                                singleLine
+                              />
+                            </div>
+                            {canEdit ? (
+                              <button
+                                type="button"
+                                onClick={() => removeExperience(index)}
+                                data-export="exclude"
+                                className="rounded border border-slate-300 bg-white px-2 py-0.5 text-xs text-slate-500 transition hover:border-slate-400"
+                              >
+                                删除
+                              </button>
+                            ) : null}
                           </div>
                         </div>
                         <EditableBlock
@@ -1484,15 +1606,27 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                           className="font-semibold text-slate-900"
                           singleLine
                         />
-                        <EditableBlock
-                          value={item.link}
-                          onChange={(value) =>
-                            updateProjectField(index, "link", value)
-                          }
-                          placeholder="链接"
-                          className="min-w-[120px] text-right text-xs text-slate-600"
-                          singleLine
-                        />
+                        <div className="flex items-center gap-2">
+                          <EditableBlock
+                            value={item.link}
+                            onChange={(value) =>
+                              updateProjectField(index, "link", value)
+                            }
+                            placeholder="链接"
+                            className="min-w-[120px] text-right text-xs text-slate-600"
+                            singleLine
+                          />
+                          {canEdit ? (
+                            <button
+                              type="button"
+                              onClick={() => removeProject(index)}
+                              data-export="exclude"
+                              className="rounded border border-slate-300 bg-white px-2 py-0.5 text-xs text-slate-500 transition hover:border-slate-400"
+                            >
+                              删除
+                            </button>
+                          ) : null}
+                        </div>
                       </div>
                       <EditableBlock
                         value={item.description}
@@ -1548,13 +1682,70 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <EditableBlock
-              value={aiLines.tools}
-              onChange={(value) => updateAiLine("tools", value)}
-              placeholder="例如：ChatGPT、Claude、Midjourney"
-              className="text-sm text-slate-700"
-              singleLine
-            />
+            <div className="space-y-2">
+              {aiLinks.tools.map((item, index) => {
+                const meta = parseUrlMeta(item);
+                return (
+                  <div key={`ai-tool-${index}`} className="flex items-center gap-2">
+                    <div className="flex min-w-0 flex-1 items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1.5">
+                      {meta ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={meta.favicon}
+                          alt={`${meta.label} icon`}
+                          className="h-4 w-4 shrink-0 rounded-sm"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span className="h-4 w-4 shrink-0 rounded-sm bg-slate-200" />
+                      )}
+                      {canEdit ? (
+                        <input
+                          value={item}
+                          onChange={(event) =>
+                            updateAiLink("tools", index, event.target.value)
+                          }
+                          onBlur={() => normalizeAiLinkItem("tools", index)}
+                          placeholder="https://chatgpt.com/"
+                          className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                        />
+                      ) : meta ? (
+                        <a
+                          href={meta.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="truncate text-sm text-slate-700 underline decoration-slate-300 underline-offset-2"
+                        >
+                          {meta.href}
+                        </a>
+                      ) : (
+                        <span className="truncate text-sm text-slate-700">{item}</span>
+                      )}
+                    </div>
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => removeAiLink("tools", index)}
+                        data-export="exclude"
+                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-500 transition hover:border-slate-400"
+                      >
+                        删除
+                      </button>
+                    ) : null}
+                  </div>
+                );
+              })}
+              {canEdit ? (
+                <button
+                  type="button"
+                  onClick={() => addAiLink("tools")}
+                  data-export="exclude"
+                  className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
+                >
+                  增加
+                </button>
+              ) : null}
+            </div>
           </Section>
 
           <Section
@@ -1564,13 +1755,70 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <EditableBlock
-              value={aiLines.products}
-              onChange={(value) => updateAiLine("products", value)}
-              placeholder="例如：个人简历助手、自动化内容工具"
-              className="text-sm text-slate-700"
-              singleLine
-            />
+            <div className="space-y-2">
+              {aiLinks.products.map((item, index) => {
+                const meta = parseUrlMeta(item);
+                return (
+                  <div key={`ai-product-${index}`} className="flex items-center gap-2">
+                    <div className="flex min-w-0 flex-1 items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1.5">
+                      {meta ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={meta.favicon}
+                          alt={`${meta.label} icon`}
+                          className="h-4 w-4 shrink-0 rounded-sm"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span className="h-4 w-4 shrink-0 rounded-sm bg-slate-200" />
+                      )}
+                      {canEdit ? (
+                        <input
+                          value={item}
+                          onChange={(event) =>
+                            updateAiLink("products", index, event.target.value)
+                          }
+                          onBlur={() => normalizeAiLinkItem("products", index)}
+                          placeholder="https://example.com/"
+                          className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                        />
+                      ) : meta ? (
+                        <a
+                          href={meta.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="truncate text-sm text-slate-700 underline decoration-slate-300 underline-offset-2"
+                        >
+                          {meta.href}
+                        </a>
+                      ) : (
+                        <span className="truncate text-sm text-slate-700">{item}</span>
+                      )}
+                    </div>
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => removeAiLink("products", index)}
+                        data-export="exclude"
+                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-500 transition hover:border-slate-400"
+                      >
+                        删除
+                      </button>
+                    ) : null}
+                  </div>
+                );
+              })}
+              {canEdit ? (
+                <button
+                  type="button"
+                  onClick={() => addAiLink("products")}
+                  data-export="exclude"
+                  className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
+                >
+                  增加
+                </button>
+              ) : null}
+            </div>
           </Section>
 
           <Section
