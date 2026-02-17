@@ -41,6 +41,14 @@ const flattenAssetsDir = async () => {
   await removeIfExists(assetsDir);
 };
 
+const syncNextStaticAssets = async () => {
+  const nextStaticDir = path.join(rootDir, ".next", "static");
+  if (!(await exists(nextStaticDir))) return;
+
+  const outStaticDir = path.join(pagesOutDir, "_next", "static");
+  await copyDir(nextStaticDir, outStaticDir);
+};
+
 const prepareWorkerFile = async () => {
   const workerPath = path.join(openNextDir, "worker.js");
   const workerContent = await fs.readFile(workerPath, "utf8");
@@ -72,6 +80,7 @@ const main = async () => {
   await removeIfExists(pagesOutDir);
   await copyDir(openNextDir, pagesOutDir);
   await flattenAssetsDir();
+  await syncNextStaticAssets();
 
   const hiddenBuildDir = path.join(pagesOutDir, ".build");
   const normalBuildDir = path.join(pagesOutDir, "build");
