@@ -1,5 +1,6 @@
 name = "resumeai"
-pages_build_output_dir = "pages-dist"
+main = ".open-next/worker.js"
+assets = { directory = ".open-next/assets", binding = "ASSETS" }
 compatibility_date = "2026-02-16"
 compatibility_flags = ["nodejs_compat"]
 
@@ -9,9 +10,15 @@ binding = "DB"
 database_name = "resumeai-dev"
 database_id = "preview"
 
+[[services]]
+binding = "WORKER_SELF_REFERENCE"
+service = "resumeai"
+
 [env.production]
 compatibility_date = "2026-02-16"
 compatibility_flags = ["nodejs_compat"]
+main = ".open-next/worker.js"
+assets = { directory = ".open-next/assets", binding = "ASSETS" }
 
 [env.production.vars]
 NODE_ENV = "production"
@@ -22,3 +29,7 @@ ZHIPU_MODEL = "glm-4.7-flash"
 database_id = "f45c484f-8178-409b-9b91-70fdee561767"
 binding = "DB"
 database_name = "DB"
+
+[[env.production.services]]
+binding = "WORKER_SELF_REFERENCE"
+service = "resumeai-production"
