@@ -511,7 +511,7 @@ const formatProjects = (values: Resume["projects"]) =>
     .join("\n\n");
 
 const resumeToText = (resume: Resume): TextSections => ({
-  skills: formatLines(resume.skills),
+  skills: resume.skills.filter(Boolean).join(" • "),
   experience: formatExperience(resume.experience),
   projects: formatProjects(resume.projects),
 });
@@ -957,7 +957,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         ...basics,
         links: structuredResume.basics.links ?? [],
       },
-      skills: normalizeStringList(skillItems),
+      skills: text.skills.split(/[•\n]/).map((s) => s.trim()).filter(Boolean),
       education: hasEducation
         ? [
             {
@@ -1489,51 +1489,12 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <div className="space-y-2">
-              {(canEdit ? skillItems : skillItems.filter((item) => item.trim().length > 0)).map(
-                (item, index) => (
-                  <div key={`skill-${index}`} className="flex items-center gap-2">
-                    {canEdit ? (
-                      <>
-                        <input
-                          value={item}
-                          onChange={(event) => updateSkillItem(index, event.target.value)}
-                          placeholder="例如：C++ / Python"
-                          className="min-w-0 flex-1 rounded border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700 outline-none placeholder:text-slate-400 print:hidden"
-                        />
-                        <span className="hidden print:inline-block rounded border border-slate-200 bg-white px-2 py-1 text-sm text-slate-700">
-                          {item}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="rounded border border-slate-200 bg-white px-2 py-1 text-sm text-slate-700">
-                        {item}
-                      </span>
-                    )}
-                    {canEdit ? (
-                      <button
-                        type="button"
-                        onClick={() => removeSkillItem(index)}
-                        data-export="exclude"
-                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-500 transition hover:border-slate-400"
-                      >
-                        ×
-                      </button>
-                    ) : null}
-                  </div>
-                ),
-              )}
-              {canEdit ? (
-                <button
-                  type="button"
-                  onClick={addSkillItem}
-                  data-export="exclude"
-                  className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
-                >
-                  +
-                </button>
-              ) : null}
-            </div>
+            <EditableBlock
+              value={text.skills}
+              onChange={(value) => updateText("skills", value)}
+              placeholder="例如：Python • React • 数据分析 • 产品设计"
+              className="text-sm text-slate-700"
+            />
           </Section>
 
           <Section
@@ -1812,7 +1773,6 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
               className={template.sectionSpacing}
               titleClassName={template.sectionTitleClass}
               lineClassName={template.sectionLineClass}
-              tip="建议在第二页展示"
             >
               <div className="grid grid-cols-3 gap-3">
                 {showcase.map((item, index) => (
