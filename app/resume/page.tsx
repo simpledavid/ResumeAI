@@ -1393,12 +1393,12 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
   return (
     <ResumeReadonlyContext.Provider value={isReadonly}>
       <div
-        className={`min-h-screen text-slate-900 ${bodyFont.variable} ${headingFont.variable}`}
+        className={`min-h-screen print:min-h-0 print:bg-white text-slate-900 ${bodyFont.variable} ${headingFont.variable}`}
         style={{ backgroundColor: template.pageBg }}
       >
-        <div className="mx-auto flex max-w-[900px] flex-col gap-4 px-4 py-6">
+        <div className="mx-auto flex max-w-[900px] flex-col gap-4 px-4 py-6 print:max-w-none print:px-0 print:py-0 print:gap-0">
           {canEdit ? (
-            <div className="flex flex-wrap items-center justify-end gap-2 text-sm text-slate-600">
+            <div className="flex flex-wrap items-center justify-end gap-2 text-sm text-slate-600 print:hidden">
               {username ? (
                 <a
                   href={`/${username}`}
@@ -1445,7 +1445,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
               </button>
             </div>
           ) : isReadonly ? (
-            <div className="flex justify-end" data-export="exclude">
+            <div className="flex justify-end print:hidden" data-export="exclude">
               <a
                 href="/register"
                 className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400"
@@ -1455,7 +1455,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             </div>
           ) : null}
           {((canEdit && assistantMessage) || error) && (
-            <div className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
+            <div className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 print:hidden">
               {canEdit && assistantMessage && <p>{assistantMessage}</p>}
               {error && <p className="text-rose-600">{error}</p>}
             </div>
@@ -1464,7 +1464,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         <div
           ref={resumeRef}
           id="resume-root"
-          className={`w-full border text-slate-900 ${template.resumePaddingClass}`}
+          className={`w-full border print:border-0 print:max-w-none text-slate-900 ${template.resumePaddingClass}`}
           style={resumeStyle}
         >
           <div className="pb-0">
@@ -1827,7 +1827,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">
+            <div className="grid grid-cols-4 gap-2">
               {aiLinks.tools.map((item, index) => {
                 const meta = parseUrlMeta(item);
                 const showInput = canEdit && (!meta || item.trim().length === 0);
@@ -1854,10 +1854,10 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                         className="flex min-w-0 items-center gap-2 text-sm text-slate-700"
                       >
                         <SiteIcon meta={meta} />
-                        <span className="truncate">{meta.label}</span>
+                        <span className="break-all">{meta.label}</span>
                       </a>
                     ) : (
-                      <span className="truncate text-sm text-slate-700">{item}</span>
+                      <span className="break-all text-sm text-slate-700">{item}</span>
                     )}
                     {canEdit ? (
                       <button
@@ -1893,7 +1893,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">
+            <div className="grid grid-cols-4 gap-2">
               {aiLinks.products.map((item, index) => {
                 const meta = parseUrlMeta(item);
                 const showInput = canEdit && (!meta || item.trim().length === 0);
@@ -1920,10 +1920,10 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                         className="flex min-w-0 items-center gap-2 text-sm text-slate-700"
                       >
                         <SiteIcon meta={meta} />
-                        <span className="truncate">{meta.label}</span>
+                        <span className="break-all">{meta.label}</span>
                       </a>
                     ) : (
-                      <span className="truncate text-sm text-slate-700">{item}</span>
+                      <span className="break-all text-sm text-slate-700">{item}</span>
                     )}
                     {canEdit ? (
                       <button
@@ -1999,6 +1999,21 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             content: attr(data-placeholder);
             color: #9ca3af;
             pointer-events: none;
+          }
+          @media print {
+            @page {
+              size: A4 portrait;
+              margin: 10mm;
+            }
+            :global(body) {
+              background: white !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            :global(#resume-root) {
+              max-width: 190mm !important;
+              min-height: 0 !important;
+            }
           }
         `}</style>
       </div>
