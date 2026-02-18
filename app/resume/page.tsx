@@ -355,6 +355,50 @@ const parseUrlMeta = (value: string): UrlMeta | null => {
   }
 };
 
+const inferMetaFromKeyword = (value: string): UrlMeta | null => {
+  const keyword = value.trim().toLowerCase();
+  if (!keyword) return null;
+
+  const catalog: Array<{ match: RegExp; href: string; label: string }> = [
+    { match: /chatgpt|openai/, href: "https://chatgpt.com", label: "ChatGPT" },
+    { match: /claude|anthropic/, href: "https://claude.ai", label: "Claude" },
+    {
+      match: /notebooklm|notebook lm/,
+      href: "https://notebooklm.google.com",
+      label: "NotebookLM",
+    },
+    { match: /gemini/, href: "https://gemini.google.com", label: "Gemini" },
+    {
+      match: /deepseek|深度求索/,
+      href: "https://www.deepseek.com",
+      label: "DeepSeek",
+    },
+    { match: /github/, href: "https://github.com", label: "GitHub" },
+    { match: /resumio/, href: "https://resumio.cn", label: "Resumio" },
+  ];
+
+  const matched = catalog.find((item) => item.match.test(keyword));
+  if (!matched) return null;
+
+  try {
+    const parsed = new URL(matched.href);
+    const origin = `${parsed.protocol}//${parsed.hostname}`;
+    return {
+      href: matched.href,
+      label: matched.label,
+      iconPrimary: `${origin}/favicon.ico`,
+      iconFallback: `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
+        origin,
+      )}`,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const resolveUrlMeta = (value: string): UrlMeta | null =>
+  parseUrlMeta(value) ?? inferMetaFromKeyword(value);
+
 const normalizeResume = (resume: Resume): Resume => {
   const experienceSource = Array.isArray(resume.experience)
     ? resume.experience
@@ -569,7 +613,6 @@ function SiteIcon({
       src={src}
       alt={`${meta.label} icon`}
       className="h-4 w-4 shrink-0 rounded-sm"
-      data-export="exclude"
       loading="lazy"
       referrerPolicy="no-referrer"
       onError={() => {
@@ -1097,8 +1140,25 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    const originalTitle = document.title;
+    const name = basics.name.trim();
+    const jobTarget = basics.jobTarget.trim();
+    const printTitle = [name, jobTarget].filter(Boolean).join("-");
+    if (printTitle) {
+      document.title = printTitle;
+    }
+    if (document.fonts?.ready) {
+      try {
+        await document.fonts.ready;
+      } catch {
+        // ignore font readiness errors
+      }
+    }
     window.print();
+    window.setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
   };
 
   if (booting) {
@@ -1436,27 +1496,16 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                           className="font-semibold text-slate-900"
                           singleLine
                         />
-                        <div className="flex items-center gap-2">
-                          <EditableBlock
-                            value={item.link}
-                            onChange={(value) =>
-                              updateProjectField(index, "link", value)
-                            }
-                            placeholder="链接"
-                            className="min-w-[120px] text-right text-xs text-slate-600"
-                            singleLine
-                          />
-                          {canEdit ? (
-                            <button
-                              type="button"
-                              onClick={() => removeProject(index)}
-                              data-export="exclude"
-                              className="rounded border border-slate-300 bg-white px-2 py-0.5 text-xs text-slate-500 transition hover:border-slate-400"
-                            >
-                              删除
-                            </button>
-                          ) : null}
-                        </div>
+                        {canEdit ? (
+                          <button
+                            type="button"
+                            onClick={() => removeProject(index)}
+                            data-export="exclude"
+                            className="rounded border border-slate-300 bg-white px-2 py-0.5 text-xs text-slate-500 transition hover:border-slate-400"
+                          >
+                            删除
+                          </button>
+                        ) : null}
                       </div>
                       <EditableBlock
                         value={item.description}
@@ -1551,9 +1600,12 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <div className="grid grid-cols-4 gap-2">
+            <div
+              className="grid grid-cols-4 print:grid-cols-4 gap-2"
+              style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}
+            >
               {aiLinks.tools.map((item, index) => {
-                const meta = parseUrlMeta(item);
+                const meta = resolveUrlMeta(item);
                 const showInput = canEdit && (!meta || item.trim().length === 0);
                 return (
                   <div
@@ -1617,9 +1669,12 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <div className="grid grid-cols-4 gap-2">
+            <div
+              className="grid grid-cols-4 print:grid-cols-4 gap-2"
+              style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}
+            >
               {aiLinks.products.map((item, index) => {
-                const meta = parseUrlMeta(item);
+                const meta = resolveUrlMeta(item);
                 const showInput = canEdit && (!meta || item.trim().length === 0);
                 return (
                   <div
