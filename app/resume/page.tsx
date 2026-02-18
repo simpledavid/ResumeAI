@@ -1393,7 +1393,8 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
   return (
     <ResumeReadonlyContext.Provider value={isReadonly}>
       <div
-        className={`min-h-screen print:min-h-0 print:bg-white text-slate-900 ${bodyFont.variable} ${headingFont.variable}`}
+        id="resume-page"
+        className={`min-h-screen print:min-h-0 text-slate-900 ${bodyFont.variable} ${headingFont.variable}`}
         style={{ backgroundColor: template.pageBg }}
       >
         <div className="mx-auto flex max-w-[900px] flex-col gap-4 px-4 py-6 print:max-w-none print:px-0 print:py-0 print:gap-0">
@@ -1783,12 +1784,17 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                 (item, index) => (
                   <div key={`skill-${index}`} className="flex items-center gap-2">
                     {canEdit ? (
-                      <input
-                        value={item}
-                        onChange={(event) => updateSkillItem(index, event.target.value)}
-                        placeholder="例如：C++ / Python"
-                        className="min-w-0 flex-1 rounded border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-                      />
+                      <>
+                        <input
+                          value={item}
+                          onChange={(event) => updateSkillItem(index, event.target.value)}
+                          placeholder="例如：C++ / Python"
+                          className="min-w-0 flex-1 rounded border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700 outline-none placeholder:text-slate-400 print:hidden"
+                        />
+                        <span className="hidden print:inline-block rounded border border-slate-200 bg-white px-2 py-1 text-sm text-slate-700">
+                          {item}
+                        </span>
+                      </>
                     ) : (
                       <span className="rounded border border-slate-200 bg-white px-2 py-1 text-sm text-slate-700">
                         {item}
@@ -2010,9 +2016,17 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
+            /* 覆盖外层页面灰色背景（inline style 优先级高，需要 !important） */
+            :global(#resume-page) {
+              background: white !important;
+            }
             :global(#resume-root) {
               max-width: 190mm !important;
               min-height: 0 !important;
+            }
+            /* 隐藏所有编辑控件（删除/增加按钮等） */
+            :global([data-export="exclude"]) {
+              display: none !important;
             }
           }
         `}</style>
