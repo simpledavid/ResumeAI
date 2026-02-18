@@ -37,10 +37,14 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const resume =
-      typeof row.resume_json === "string" && row.resume_json.trim()
-        ? JSON.parse(row.resume_json)
-        : null;
+    let resume: unknown = null;
+    try {
+      if (typeof row.resume_json === "string" && row.resume_json.trim()) {
+        resume = JSON.parse(row.resume_json);
+      }
+    } catch {
+      // Corrupted JSON — serve empty resume
+    }
 
     return NextResponse.json({
       user: {

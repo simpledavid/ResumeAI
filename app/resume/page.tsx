@@ -1564,7 +1564,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
               <div className={`flex flex-col gap-2 ${avatarWrapperClass}`}>
                 <label
                   htmlFor={canEdit ? "avatar-upload" : undefined}
-                  className={`flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-transparent text-xs text-slate-500 ${
+                  className={`flex items-center justify-center overflow-hidden bg-transparent text-xs text-slate-500 ${template.avatarFrameClass} ${
                     canEdit ? "cursor-pointer" : "cursor-default"
                   }`}
                   aria-label="上传头像"
@@ -1574,7 +1574,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                     <img
                       src={avatarUrl}
                       alt="头像"
-                      className="h-full w-full rounded-full object-cover"
+                      className={`h-full w-full object-cover ${template.avatarImageClass}`}
                     />
                   ) : (
                     "上传头像"
@@ -1604,7 +1604,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
           >
             {structuredResume.experience.length > 0 ? (
               <>
-                <div className="space-y-4 min-h-[220px]">
+                <div className="space-y-4 min-h-[220px] print:min-h-0">
                   {structuredResume.experience.map((item, index) => (
                       <div key={`experience-${index}`} className="space-y-2">
                         <div className="flex items-baseline justify-between gap-4">
@@ -1704,7 +1704,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
           >
             {structuredResume.projects.length > 0 ? (
               <>
-                <div className="space-y-4 min-h-[220px]">
+                <div className="space-y-4 min-h-[220px] print:min-h-0">
                   {structuredResume.projects.map((item, index) => (
                     <div key={`project-${index}`} className="space-y-2">
                       <div className="flex items-baseline justify-between gap-4">
@@ -1827,7 +1827,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {aiLinks.tools.map((item, index) => {
                 const meta = parseUrlMeta(item);
                 const showInput = canEdit && (!meta || item.trim().length === 0);
@@ -1854,10 +1854,10 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                         className="flex min-w-0 items-center gap-2 text-sm text-slate-700"
                       >
                         <SiteIcon meta={meta} />
-                        <span className="break-all">{meta.label}</span>
+                        <span className="truncate">{meta.label}</span>
                       </a>
                     ) : (
-                      <span className="break-all text-sm text-slate-700">{item}</span>
+                      <span className="truncate text-sm text-slate-700">{item}</span>
                     )}
                     {canEdit ? (
                       <button
@@ -1893,7 +1893,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {aiLinks.products.map((item, index) => {
                 const meta = parseUrlMeta(item);
                 const showInput = canEdit && (!meta || item.trim().length === 0);
@@ -1920,10 +1920,10 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                         className="flex min-w-0 items-center gap-2 text-sm text-slate-700"
                       >
                         <SiteIcon meta={meta} />
-                        <span className="break-all">{meta.label}</span>
+                        <span className="truncate">{meta.label}</span>
                       </a>
                     ) : (
-                      <span className="break-all text-sm text-slate-700">{item}</span>
+                      <span className="truncate text-sm text-slate-700">{item}</span>
                     )}
                     {canEdit ? (
                       <button

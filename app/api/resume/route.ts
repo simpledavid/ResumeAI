@@ -37,7 +37,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ user, resume: null });
     }
 
-    const parsed = JSON.parse(row.resume_json);
+    let parsed: unknown = null;
+    try {
+      parsed = JSON.parse(row.resume_json);
+    } catch {
+      // Corrupted JSON in DB — return null resume so the editor starts fresh
+    }
     return NextResponse.json({
       user,
       resume: parsed,
