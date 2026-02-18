@@ -1209,18 +1209,8 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         <div className="mx-auto flex max-w-[900px] flex-col gap-4 px-4 py-6 print:max-w-none print:px-0 print:py-0 print:gap-0">
           {canEdit ? (
             <div className="flex flex-wrap items-center justify-end gap-2 text-sm print:hidden">
-              {username ? (
-                <a
-                  href={`/${username}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={`rounded border px-2.5 py-1 text-xs transition ${isDark ? "border-[#2a2a2a] bg-[#111] text-[#888] hover:border-[#444] hover:text-[#ccc]" : "border-slate-200 bg-white text-slate-500 hover:border-slate-400 hover:text-slate-700"}`}
-                >
-                  /{username}
-                </a>
-              ) : null}
               {savedAt ? (
-                <span className={`text-xs ${isDark ? "text-[#555]" : "text-slate-400"}`}>
+                <span className={`text-xs ${isDark ? "text-[#666]" : "text-slate-400"}`}>
                   已保存 {new Date(savedAt).toLocaleTimeString("zh-CN")}
                 </span>
               ) : null}
@@ -1281,7 +1271,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         <div
           ref={resumeRef}
           id="resume-root"
-          className={`w-full border print:border-0 print:max-w-none text-slate-900 ${template.resumePaddingClass}`}
+          className={`w-full border print:border-0 print:max-w-none text-slate-900 ${template.resumePaddingClass} ${isDark ? "shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_24px_60px_rgba(0,0,0,0.8)]" : ""}`}
           style={resumeStyle}
         >
           <div className="pb-0">

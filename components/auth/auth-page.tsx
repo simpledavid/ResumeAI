@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Github, Lock, UserRound, Sparkles, Printer, Share2 } from "lucide-react";
+import { Eye, EyeOff, Github, Lock, Moon, Printer, Share2, Sparkles, Sun, UserRound } from "lucide-react";
 import { Press_Start_2P } from "next/font/google";
 
 const pixelFont = Press_Start_2P({
@@ -206,12 +206,9 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
   const authSwitchInactiveClassName = isLightTheme
     ? "text-[#6b7280] hover:text-[#111827]"
     : "text-[#959595] hover:text-[#ececec]";
-  const themeSwitchClassName = isLightTheme
-    ? "inline-flex rounded-full border border-[#d4d4d8] bg-[#ffffff] p-1 shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
-    : "inline-flex rounded-full border border-[#2a2a2a] bg-[#0d0d0d] p-1 shadow-[0_8px_24px_rgba(0,0,0,0.4)]";
-  const themeSwitchInactiveClassName = isLightTheme
-    ? "text-[#6b7280] hover:text-[#111827]"
-    : "text-[#8f8f8f] hover:text-[#ececec]";
+  const themeBtnClassName = isLightTheme
+    ? "flex h-9 w-9 items-center justify-center rounded-xl border border-[#d4d4d8] bg-[#ffffff] text-[#6b7280] shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition hover:border-[#ff9d23] hover:text-[#c26a00]"
+    : "flex h-9 w-9 items-center justify-center rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] text-[#888] shadow-[0_4px_12px_rgba(0,0,0,0.4)] transition hover:border-[#ff9d23] hover:text-[#ff9d23]";
   const inputClassName = isLightTheme
     ? "h-11 w-full rounded-xl border border-[#d4d4d8] bg-[#ffffff] px-3 text-sm text-[#111827] outline-none placeholder:text-[#9ca3af] transition focus:border-[#ff8700] focus:shadow-[0_0_0_2px_rgba(255,135,0,0.18)]"
     : "h-11 w-full rounded-xl border border-[#2a2a2a] bg-[#101010] px-3 text-sm text-[#f5f5f5] outline-none placeholder:text-[#6d6d6d] transition focus:border-[#ff8700] focus:shadow-[0_0_0_2px_rgba(255,135,0,0.22)]";
@@ -242,30 +239,15 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
       <div className={gridClassName} />
 
       <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
-        <div className={themeSwitchClassName}>
-          <button
-            type="button"
-            onClick={() => changeTheme("dark")}
-            className={`rounded-full px-3 py-1 text-xs transition ${
-              isLightTheme
-                ? themeSwitchInactiveClassName
-                : "bg-[#ff9d23] text-[#15110a]"
-            }`}
-          >
-            深色
-          </button>
-          <button
-            type="button"
-            onClick={() => changeTheme("light")}
-            className={`rounded-full px-3 py-1 text-xs transition ${
-              isLightTheme
-                ? "bg-[#ff9d23] text-[#15110a]"
-                : themeSwitchInactiveClassName
-            }`}
-          >
-            浅色
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => changeTheme(isLightTheme ? "dark" : "light")}
+          className={themeBtnClassName}
+          aria-label={isLightTheme ? "切换深色" : "切换浅色"}
+          title={isLightTheme ? "切换深色" : "切换浅色"}
+        >
+          {isLightTheme ? <Moon className="h-4 w-4" aria-hidden /> : <Sun className="h-4 w-4" aria-hidden />}
+        </button>
       </div>
 
       <div className="relative z-10 flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center">
