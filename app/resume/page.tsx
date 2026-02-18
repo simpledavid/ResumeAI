@@ -161,6 +161,8 @@ type Resume = {
   aiProducts?: string;
   aiToolLinks?: string[];
   aiProductLinks?: string[];
+  aiToolLevels?: string[];
+  aiProductLevels?: string[];
 };
 
 type ChatApiResponse = {
@@ -222,6 +224,8 @@ type EducationLine = {
 type AiLinks = {
   tools: string[];
   products: string[];
+  toolLevels: string[];
+  productLevels: string[];
 };
 
 type UrlMeta = {
@@ -295,6 +299,8 @@ const emptyEducationLine: EducationLine = {
 const emptyAiLinks: AiLinks = {
   tools: [],
   products: [],
+  toolLevels: [],
+  productLevels: [],
 };
 
 const parseLineList = (value?: string) =>
@@ -714,7 +720,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     setSkillItems((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
   };
 
-  const updateAiLink = (field: keyof AiLinks, index: number, value: string) => {
+  const updateAiLink = (field: "tools" | "products", index: number, value: string) => {
     if (isReadonly) return;
     setAiLinks((prev) => ({
       ...prev,
@@ -724,23 +730,38 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     }));
   };
 
-  const addAiLink = (field: keyof AiLinks) => {
+  const addAiLink = (field: "tools" | "products") => {
     if (isReadonly) return;
+    const levelField = field === "tools" ? "toolLevels" : "productLevels";
     setAiLinks((prev) => ({
       ...prev,
       [field]: [...prev[field], ""],
+      [levelField]: [...prev[levelField], "熟练"],
     }));
   };
 
-  const removeAiLink = (field: keyof AiLinks, index: number) => {
+  const removeAiLink = (field: "tools" | "products", index: number) => {
     if (isReadonly) return;
+    const levelField = field === "tools" ? "toolLevels" : "productLevels";
     setAiLinks((prev) => ({
       ...prev,
-      [field]: prev[field].filter((_, itemIndex) => itemIndex !== index),
+      [field]: prev[field].filter((_, i) => i !== index),
+      [levelField]: prev[levelField].filter((_, i) => i !== index),
     }));
   };
 
-  const normalizeAiLinkItem = (field: keyof AiLinks, index: number) => {
+  const toggleAiLinkLevel = (field: "tools" | "products", index: number) => {
+    if (isReadonly) return;
+    const levelField = field === "tools" ? "toolLevels" : "productLevels";
+    setAiLinks((prev) => ({
+      ...prev,
+      [levelField]: prev[levelField].map((lv, i) =>
+        i === index ? (lv === "了解" ? "熟练" : "了解") : lv,
+      ),
+    }));
+  };
+
+  const normalizeAiLinkItem = (field: "tools" | "products", index: number) => {
     if (isReadonly) return;
     setAiLinks((prev) => ({
       ...prev,
@@ -851,27 +872,35 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     } else {
       setEducationLine(emptyEducationLine);
     }
+    const normalizedTools = normalizeAiLinkArray(normalizedResume.aiToolLinks);
+    const normalizedProducts = normalizeAiLinkArray(normalizedResume.aiProductLinks);
     setAiLinks({
-      tools: normalizeAiLinkArray(normalizedResume.aiToolLinks),
-      products: normalizeAiLinkArray(normalizedResume.aiProductLinks),
+      tools: normalizedTools,
+      products: normalizedProducts,
+      toolLevels: normalizedTools.map((_, i) => normalizedResume.aiToolLevels?.[i] ?? "熟练"),
+      productLevels: normalizedProducts.map((_, i) => normalizedResume.aiProductLevels?.[i] ?? "熟练"),
     });
   };
 
   const buildResumePayload = (): Resume => {
     const hasEducation =
       educationLine.school || educationLine.major || educationLine.period;
-    const normalizedAiTools = aiLinks.tools
-      .map((item) => normalizeUrlValue(item))
-      .filter(Boolean);
-    const normalizedAiProducts = aiLinks.products
-      .map((item) => normalizeUrlValue(item))
-      .filter(Boolean);
+    const normalizedAiToolEntries = aiLinks.tools
+      .map((item, i) => ({ url: normalizeUrlValue(item), level: aiLinks.toolLevels[i] ?? "熟练" }))
+      .filter((e) => e.url);
+    const normalizedAiProductEntries = aiLinks.products
+      .map((item, i) => ({ url: normalizeUrlValue(item), level: aiLinks.productLevels[i] ?? "熟练" }))
+      .filter((e) => e.url);
+    const normalizedAiTools = normalizedAiToolEntries.map((e) => e.url);
+    const normalizedAiProducts = normalizedAiProductEntries.map((e) => e.url);
     return {
       ...structuredResume,
       aiTools: normalizedAiTools.join("\n"),
       aiProducts: normalizedAiProducts.join("\n"),
       aiToolLinks: normalizedAiTools,
       aiProductLinks: normalizedAiProducts,
+      aiToolLevels: normalizedAiToolEntries.map((e) => e.level),
+      aiProductLevels: normalizedAiProductEntries.map((e) => e.level),
       basics: {
         ...structuredResume.basics,
         ...basics,
@@ -1622,7 +1651,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
           </Section>
 
           <Section
-            title="AI工具"
+            title="AI能力"
             icon={Sparkles}
             className={template.sectionSpacing}
             titleClassName={template.sectionTitleClass}
@@ -1635,40 +1664,58 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
               {aiLinks.tools.map((item, index) => {
                 const meta = resolveUrlMeta(item);
                 const showInput = canEdit && (!meta || item.trim().length === 0);
+                const level = aiLinks.toolLevels[index] ?? "熟练";
+                const isProficient = level === "熟练";
                 return (
                   <div
                     key={`ai-tool-${index}`}
-                    className="relative flex min-h-10 items-center rounded border border-slate-200 bg-white px-2 py-1.5"
+                    className="relative flex flex-col rounded border border-slate-200 bg-white px-2 py-1.5 gap-1"
                   >
-                    {showInput ? (
-                      <input
-                        value={item}
-                        onChange={(event) =>
-                          updateAiLink("tools", index, event.target.value)
-                        }
-                        onBlur={() => normalizeAiLinkItem("tools", index)}
-                        placeholder="https://chatgpt.com/"
-                        className="min-w-0 flex-1 bg-transparent pr-7 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-                      />
-                    ) : meta ? (
-                      <a
-                        href={meta.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex min-w-0 items-center gap-2 text-sm text-slate-700"
+                    <div className="flex min-w-0 items-center pr-5">
+                      {showInput ? (
+                        <input
+                          value={item}
+                          onChange={(event) =>
+                            updateAiLink("tools", index, event.target.value)
+                          }
+                          onBlur={() => normalizeAiLinkItem("tools", index)}
+                          placeholder="https://chatgpt.com/"
+                          className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                        />
+                      ) : meta ? (
+                        <a
+                          href={meta.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex min-w-0 items-center gap-2 text-sm text-slate-700"
+                        >
+                          <SiteIcon meta={meta} />
+                          <span className="truncate">{meta.label}</span>
+                        </a>
+                      ) : (
+                        <span className="truncate text-sm text-slate-700">{item}</span>
+                      )}
+                    </div>
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleAiLinkLevel("tools", index)}
+                        data-export="exclude"
+                        className={`self-start rounded px-1.5 py-0.5 text-[10px] font-medium transition ${isProficient ? "bg-blue-50 text-blue-600 hover:bg-blue-100" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
                       >
-                        <SiteIcon meta={meta} />
-                        <span className="truncate">{meta.label}</span>
-                      </a>
+                        {level}
+                      </button>
                     ) : (
-                      <span className="truncate text-sm text-slate-700">{item}</span>
+                      <span className={`self-start rounded px-1.5 py-0.5 text-[10px] font-medium ${isProficient ? "bg-blue-50 text-blue-600" : "bg-slate-100 text-slate-500"}`}>
+                        {level}
+                      </span>
                     )}
                     {canEdit ? (
                       <button
                         type="button"
                         onClick={() => removeAiLink("tools", index)}
                         data-export="exclude"
-                        className="absolute right-1 top-1 rounded px-1 text-xs text-slate-500 transition hover:bg-slate-100"
+                        className="absolute right-1 top-1 rounded px-1 text-xs text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
                         aria-label="删除"
                       >
                         ×
@@ -1682,7 +1729,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   type="button"
                   onClick={() => addAiLink("tools")}
                   data-export="exclude"
-                  className="flex min-h-10 items-center justify-center rounded border border-dashed border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
+                  className="flex min-h-[52px] items-center justify-center rounded border border-dashed border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
                 >
                   +
                 </button>
@@ -1704,40 +1751,58 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
               {aiLinks.products.map((item, index) => {
                 const meta = resolveUrlMeta(item);
                 const showInput = canEdit && (!meta || item.trim().length === 0);
+                const level = aiLinks.productLevels[index] ?? "熟练";
+                const isProficient = level === "熟练";
                 return (
                   <div
                     key={`ai-product-${index}`}
-                    className="relative flex min-h-10 items-center rounded border border-slate-200 bg-white px-2 py-1.5"
+                    className="relative flex flex-col rounded border border-slate-200 bg-white px-2 py-1.5 gap-1"
                   >
-                    {showInput ? (
-                      <input
-                        value={item}
-                        onChange={(event) =>
-                          updateAiLink("products", index, event.target.value)
-                        }
-                        onBlur={() => normalizeAiLinkItem("products", index)}
-                        placeholder="https://example.com/"
-                        className="min-w-0 flex-1 bg-transparent pr-7 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-                      />
-                    ) : meta ? (
-                      <a
-                        href={meta.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex min-w-0 items-center gap-2 text-sm text-slate-700"
+                    <div className="flex min-w-0 items-center pr-5">
+                      {showInput ? (
+                        <input
+                          value={item}
+                          onChange={(event) =>
+                            updateAiLink("products", index, event.target.value)
+                          }
+                          onBlur={() => normalizeAiLinkItem("products", index)}
+                          placeholder="https://example.com/"
+                          className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                        />
+                      ) : meta ? (
+                        <a
+                          href={meta.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex min-w-0 items-center gap-2 text-sm text-slate-700"
+                        >
+                          <SiteIcon meta={meta} />
+                          <span className="truncate">{meta.label}</span>
+                        </a>
+                      ) : (
+                        <span className="truncate text-sm text-slate-700">{item}</span>
+                      )}
+                    </div>
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleAiLinkLevel("products", index)}
+                        data-export="exclude"
+                        className={`self-start rounded px-1.5 py-0.5 text-[10px] font-medium transition ${isProficient ? "bg-blue-50 text-blue-600 hover:bg-blue-100" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
                       >
-                        <SiteIcon meta={meta} />
-                        <span className="truncate">{meta.label}</span>
-                      </a>
+                        {level}
+                      </button>
                     ) : (
-                      <span className="truncate text-sm text-slate-700">{item}</span>
+                      <span className={`self-start rounded px-1.5 py-0.5 text-[10px] font-medium ${isProficient ? "bg-blue-50 text-blue-600" : "bg-slate-100 text-slate-500"}`}>
+                        {level}
+                      </span>
                     )}
                     {canEdit ? (
                       <button
                         type="button"
                         onClick={() => removeAiLink("products", index)}
                         data-export="exclude"
-                        className="absolute right-1 top-1 rounded px-1 text-xs text-slate-500 transition hover:bg-slate-100"
+                        className="absolute right-1 top-1 rounded px-1 text-xs text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
                         aria-label="删除"
                       >
                         ×
@@ -1751,7 +1816,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   type="button"
                   onClick={() => addAiLink("products")}
                   data-export="exclude"
-                  className="flex min-h-10 items-center justify-center rounded border border-dashed border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
+                  className="flex min-h-[52px] items-center justify-center rounded border border-dashed border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
                 >
                   +
                 </button>
