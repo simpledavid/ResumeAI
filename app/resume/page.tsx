@@ -1417,21 +1417,21 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                         <div className="flex items-baseline justify-between gap-4">
                           <div className="flex min-w-0 items-baseline gap-2">
                             <EditableBlock
-                              value={item.role}
-                              onChange={(value) =>
-                                updateExperienceField(index, "role", value)
-                              }
-                              placeholder="职位"
-                              className="font-semibold text-slate-900"
-                              singleLine
-                            />
-                            <span className="text-slate-400">-</span>
-                            <EditableBlock
                               value={item.company}
                               onChange={(value) =>
                                 updateExperienceField(index, "company", value)
                               }
                               placeholder="公司"
+                              className="font-semibold text-slate-900"
+                              singleLine
+                            />
+                            <span className="text-slate-400">-</span>
+                            <EditableBlock
+                              value={item.role}
+                              onChange={(value) =>
+                                updateExperienceField(index, "role", value)
+                              }
+                              placeholder="职位"
                               className="font-semibold text-slate-900"
                               singleLine
                             />
