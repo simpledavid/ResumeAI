@@ -163,6 +163,7 @@ type Resume = {
   aiProductLinks?: string[];
   aiToolLevels?: string[];
   aiProductLevels?: string[];
+  showcase?: { name: string; imageUrl: string; link: string }[];
 };
 
 type ChatApiResponse = {
@@ -640,6 +641,8 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
   const [educationLine, setEducationLine] =
     useState<EducationLine>(emptyEducationLine);
   const [aiLinks, setAiLinks] = useState<AiLinks>(emptyAiLinks);
+  const [showcase, setShowcase] = useState<{ name: string; imageUrl: string; link: string }[]>([]);
+  const [uploadingShowcaseIndex, setUploadingShowcaseIndex] = useState(-1);
   const [structuredResume, setStructuredResume] = useState<Resume>(emptyResume);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -761,6 +764,37 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     }));
   };
 
+  const addShowcaseItem = () => {
+    if (isReadonly) return;
+    setShowcase((prev) => [...prev, { name: "", imageUrl: "", link: "" }]);
+  };
+
+  const removeShowcaseItem = (index: number) => {
+    if (isReadonly) return;
+    setShowcase((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateShowcaseItem = (index: number, field: "name" | "link", value: string) => {
+    if (isReadonly) return;
+    setShowcase((prev) => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+  };
+
+  const handleShowcaseImageUpload = async (index: number, file: File) => {
+    if (isReadonly) return;
+    setUploadingShowcaseIndex(index);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = (await response.json().catch(() => ({}))) as { url?: string };
+      if (response.ok && typeof data.url === "string") {
+        setShowcase((prev) => prev.map((item, i) => i === index ? { ...item, imageUrl: data.url! } : item));
+      }
+    } finally {
+      setUploadingShowcaseIndex(-1);
+    }
+  };
+
   const normalizeAiLinkItem = (field: "tools" | "products", index: number) => {
     if (isReadonly) return;
     setAiLinks((prev) => ({
@@ -880,6 +914,15 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
       toolLevels: normalizedTools.map((_, i) => normalizedResume.aiToolLevels?.[i] ?? "熟练"),
       productLevels: normalizedProducts.map((_, i) => normalizedResume.aiProductLevels?.[i] ?? "熟练"),
     });
+    setShowcase(
+      Array.isArray(normalizedResume.showcase)
+        ? normalizedResume.showcase.map((item) => ({
+            name: item.name ?? "",
+            imageUrl: item.imageUrl ?? "",
+            link: item.link ?? "",
+          }))
+        : [],
+    );
   };
 
   const buildResumePayload = (): Resume => {
@@ -901,6 +944,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
       aiProductLinks: normalizedAiProducts,
       aiToolLevels: normalizedAiToolEntries.map((e) => e.level),
       aiProductLevels: normalizedAiProductEntries.map((e) => e.level),
+      showcase: showcase.filter((item) => item.imageUrl || item.name),
       basics: {
         ...structuredResume.basics,
         ...basics,
@@ -1720,75 +1764,6 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
           </Section>
 
           <Section
-            title="我的产品"
-            icon={Sparkles}
-            className={template.sectionSpacing}
-            titleClassName={template.sectionTitleClass}
-            lineClassName={template.sectionLineClass}
-          >
-            <div
-              className="grid grid-cols-4 print:grid-cols-4 gap-2"
-              style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}
-            >
-              {aiLinks.products.map((item, index) => {
-                const meta = resolveUrlMeta(item);
-                const showInput = canEdit && (!meta || item.trim().length === 0);
-                return (
-                  <div
-                    key={`ai-product-${index}`}
-                    className="relative flex min-h-10 items-center rounded border border-slate-200 bg-white px-2 py-1.5"
-                  >
-                    {showInput ? (
-                      <input
-                        value={item}
-                        onChange={(event) =>
-                          updateAiLink("products", index, event.target.value)
-                        }
-                        onBlur={() => normalizeAiLinkItem("products", index)}
-                        placeholder="https://example.com/"
-                        className="min-w-0 flex-1 bg-transparent pr-7 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-                      />
-                    ) : meta ? (
-                      <a
-                        href={meta.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex min-w-0 items-center gap-2 text-sm text-slate-700"
-                      >
-                        <SiteIcon meta={meta} />
-                        <span className="truncate">{meta.label}</span>
-                      </a>
-                    ) : (
-                      <span className="truncate text-sm text-slate-700">{item}</span>
-                    )}
-                    {canEdit ? (
-                      <button
-                        type="button"
-                        onClick={() => removeAiLink("products", index)}
-                        data-export="exclude"
-                        className="absolute right-1 top-1 rounded px-1 text-xs text-slate-500 transition hover:bg-slate-100"
-                        aria-label="删除"
-                      >
-                        ×
-                      </button>
-                    ) : null}
-                  </div>
-                );
-              })}
-              {canEdit ? (
-                <button
-                  type="button"
-                  onClick={() => addAiLink("products")}
-                  data-export="exclude"
-                  className="flex min-h-10 items-center justify-center rounded border border-dashed border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
-                >
-                  +
-                </button>
-              ) : null}
-            </div>
-          </Section>
-
-          <Section
             title="教育经历"
             icon={GraduationCap}
             className={template.sectionSpacing}
@@ -1822,6 +1797,98 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
               />
             </div>
           </Section>
+
+          {(showcase.length > 0 || canEdit) ? (
+            <Section
+              title="我的作品"
+              icon={FolderKanban}
+              className={template.sectionSpacing}
+              titleClassName={template.sectionTitleClass}
+              lineClassName={template.sectionLineClass}
+            >
+              <div className="grid grid-cols-3 gap-3">
+                {showcase.map((item, index) => (
+                  <div
+                    key={`showcase-${index}`}
+                    className="relative flex flex-col overflow-hidden rounded border border-slate-200 bg-white"
+                  >
+                    {/* 图片区域 */}
+                    <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name || "作品截图"}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : canEdit ? (
+                        <div className="flex h-full items-center justify-center text-xs text-slate-400">
+                          {uploadingShowcaseIndex === index ? "上传中..." : "点击上传截图"}
+                        </div>
+                      ) : null}
+                      {canEdit ? (
+                        <label
+                          data-export="exclude"
+                          className="absolute inset-0 cursor-pointer"
+                          title="点击上传图片"
+                        >
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleShowcaseImageUpload(index, file);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
+                      ) : null}
+                    </div>
+                    {/* 名称 + 链接 */}
+                    <div className="px-2 py-1.5">
+                      <EditableBlock
+                        value={item.name}
+                        onChange={(value) => updateShowcaseItem(index, "name", value)}
+                        placeholder="作品名称"
+                        className="text-sm font-medium text-slate-800"
+                        singleLine
+                      />
+                      {(canEdit || item.link) ? (
+                        <EditableBlock
+                          value={item.link}
+                          onChange={(value) => updateShowcaseItem(index, "link", value)}
+                          placeholder="链接（可选）"
+                          className="mt-0.5 text-xs text-slate-400"
+                          singleLine
+                        />
+                      ) : null}
+                    </div>
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => removeShowcaseItem(index)}
+                        data-export="exclude"
+                        className="absolute right-1 top-1 rounded bg-black/40 px-1.5 py-0.5 text-xs text-white transition hover:bg-black/60"
+                        aria-label="删除"
+                      >
+                        ×
+                      </button>
+                    ) : null}
+                  </div>
+                ))}
+                {canEdit ? (
+                  <button
+                    type="button"
+                    onClick={addShowcaseItem}
+                    data-export="exclude"
+                    className="flex aspect-video items-center justify-center rounded border border-dashed border-slate-300 bg-white text-xs text-slate-500 transition hover:border-slate-400"
+                  >
+                    + 添加作品
+                  </button>
+                ) : null}
+              </div>
+            </Section>
+          ) : null}
 
           
         </div>
