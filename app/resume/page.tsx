@@ -10,8 +10,6 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import {
   Briefcase,
   CalendarDays,
@@ -595,7 +593,6 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [downloading, setDownloading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [booting, setBooting] = useState(true);
   const [username, setUsername] = useState("");
@@ -1100,286 +1097,8 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     }
   };
 
-  const handleDownload = async () => {
-    if (!resumeRef.current || downloading) return;
-    const hasValue = (value?: string) =>
-      typeof value === "string" && value.trim().length > 0;
-    const hasArrayValues = (values?: string[]) =>
-      Array.isArray(values) && values.some(hasValue);
-    const hasBasicsContent = Object.values(basics).some(hasValue);
-    const hasEducationLineContent = [
-      educationLine.school,
-      educationLine.major,
-      educationLine.period,
-    ].some(hasValue);
-    const hasTextContent = [
-      text.experience,
-      text.projects,
-    ].some(hasValue);
-    const hasSkillsContent = skillItems.some(hasValue);
-    const hasAiContent = [...aiLinks.tools, ...aiLinks.products].some(hasValue);
-    const hasExperienceContent = structuredResume.experience.some(
-      (item) =>
-        [
-          item.company,
-          item.role,
-          item.summary,
-          item.startDate,
-          item.endDate,
-          item.location,
-        ].some(hasValue) || hasArrayValues(item.highlights),
-    );
-    const hasProjectContent = structuredResume.projects.some(
-      (item) =>
-        [item.name, item.description, item.link].some(hasValue) ||
-        hasArrayValues(item.highlights) ||
-        hasArrayValues(item.tech),
-    );
-    const hasEducationContent = Array.isArray(structuredResume.education)
-      ? structuredResume.education.some(
-          (item) =>
-            [
-              item.school,
-              item.degree,
-              item.field,
-              item.startDate,
-              item.endDate,
-              item.location,
-            ].some(hasValue) || hasArrayValues(item.highlights),
-        )
-      : false;
-    const hasUserContent =
-      hasBasicsContent ||
-      hasEducationLineContent ||
-      hasSkillsContent ||
-      hasTextContent ||
-      hasAiContent ||
-      hasExperienceContent ||
-      hasProjectContent ||
-      hasEducationContent ||
-      Boolean(avatarUrl);
-
-    if (!hasUserContent) {
-      setError("请先填写内容。");
-      return;
-    }
-    setDownloading(true);
-    setError("");
-    try {
-      if (document.fonts?.ready) {
-        await document.fonts.ready;
-      }
-      const hexToRgb = (value: string) => {
-        const normalized = value.replace("#", "").trim();
-        if (normalized.length === 3) {
-          const r = Number.parseInt(normalized[0] + normalized[0], 16);
-          const g = Number.parseInt(normalized[1] + normalized[1], 16);
-          const b = Number.parseInt(normalized[2] + normalized[2], 16);
-          return { r, g, b };
-        }
-        if (normalized.length !== 6) return null;
-        const num = Number.parseInt(normalized, 16);
-        if (Number.isNaN(num)) return null;
-        return {
-          r: (num >> 16) & 0xff,
-          g: (num >> 8) & 0xff,
-          b: num & 0xff,
-        };
-      };
-
-      const backgroundRgb = hexToRgb(template.resumeBg) ?? {
-        r: 255,
-        g: 255,
-        b: 255,
-      };
-
-      const createSnapshot = () => {
-        const original = resumeRef.current!;
-        const clone = original.cloneNode(true) as HTMLElement;
-        clone.style.position = "fixed";
-        clone.style.left = "0";
-        clone.style.top = "0";
-        clone.style.margin = "0";
-        clone.style.backgroundColor = template.resumeBg;
-        clone.style.borderColor = template.border;
-        clone.style.setProperty("--accent", template.accent);
-        clone.style.setProperty("--line", template.line);
-        clone.style.width = `${original.offsetWidth}px`;
-        clone.style.minHeight = `${original.offsetHeight}px`;
-        clone.querySelectorAll("[contenteditable]").forEach((node) => {
-          node.removeAttribute("contenteditable");
-          node.removeAttribute("data-placeholder");
-          node.removeAttribute("data-empty");
-        });
-        clone.querySelectorAll("[data-export=\"exclude\"]").forEach((node) => {
-          node.remove();
-        });
-        document.body.appendChild(clone);
-        return clone;
-      };
-
-      const renderCanvas = async (
-        target: HTMLElement,
-        useForeignObject: boolean,
-      ) => {
-        target.setAttribute("data-capture-root", "true");
-        try {
-          return await html2canvas(target, {
-            scale: 2,
-            backgroundColor: template.resumeBg,
-            useCORS: true,
-            foreignObjectRendering: useForeignObject,
-            onclone: (doc) => {
-              const root = doc.querySelector(
-                "[data-capture-root=\"true\"]",
-              ) as HTMLElement | null;
-              if (!root) return;
-              root.style.setProperty("--accent", template.accent);
-              root.style.setProperty("--line", template.line);
-            root.querySelectorAll("[contenteditable]").forEach((node) => {
-              node.removeAttribute("contenteditable");
-              node.removeAttribute("data-placeholder");
-              node.removeAttribute("data-empty");
-            });
-            root.querySelectorAll("[data-export=\"exclude\"]").forEach((node) => {
-              node.remove();
-            });
-            if (!doc.defaultView) return;
-            const walker = doc.createTreeWalker(
-              root,
-              doc.defaultView.NodeFilter.SHOW_ELEMENT,
-            );
-              let node: HTMLElement | null = root;
-              while (node) {
-                const styles = doc.defaultView.getComputedStyle(node);
-                node.style.color = styles.color;
-                node.style.backgroundColor = styles.backgroundColor;
-                node.style.borderTopColor = styles.borderTopColor;
-                node.style.borderRightColor = styles.borderRightColor;
-                node.style.borderBottomColor = styles.borderBottomColor;
-                node.style.borderLeftColor = styles.borderLeftColor;
-                node.style.boxShadow = styles.boxShadow;
-                node.style.fontFamily = styles.fontFamily;
-                node.style.fontSize = styles.fontSize;
-                node.style.fontWeight = styles.fontWeight;
-                node.style.lineHeight = styles.lineHeight;
-                node.style.letterSpacing = styles.letterSpacing;
-                node = walker.nextNode() as HTMLElement | null;
-              }
-            },
-          });
-        } finally {
-          target.removeAttribute("data-capture-root");
-        }
-      };
-
-      let canvas: HTMLCanvasElement;
-      const isCanvasBlank = (value: HTMLCanvasElement) => {
-        if (!value.width || !value.height) return true;
-        const sampleSize = 192;
-        const threshold = 6;
-        const sampleCanvas = document.createElement("canvas");
-        sampleCanvas.width = sampleSize;
-        sampleCanvas.height = sampleSize;
-        const sampleContext = sampleCanvas.getContext("2d");
-        if (!sampleContext) return false;
-        try {
-          sampleContext.drawImage(value, 0, 0, sampleSize, sampleSize);
-          const data = sampleContext.getImageData(
-            0,
-            0,
-            sampleSize,
-            sampleSize,
-          ).data;
-          for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-            const a = data[i + 3];
-            const diff =
-              Math.abs(r - backgroundRgb.r) +
-              Math.abs(g - backgroundRgb.g) +
-              Math.abs(b - backgroundRgb.b);
-            if (
-              a !== 0 &&
-              diff > threshold
-            ) {
-              return false;
-            }
-          }
-        } catch (error) {
-          return false;
-        }
-        return true;
-      };
-
-      const snapshot = createSnapshot();
-      let usedForeignObject = false;
-      try {
-        try {
-          canvas = await renderCanvas(snapshot, false);
-        } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          if (/oklab|oklch|color function/i.test(message)) {
-            canvas = await renderCanvas(snapshot, true);
-            usedForeignObject = true;
-          } else {
-            throw err;
-          }
-        }
-
-        if (!usedForeignObject && isCanvasBlank(canvas)) {
-          const alternative = await renderCanvas(snapshot, true);
-          if (!isCanvasBlank(alternative)) {
-            canvas = alternative;
-          }
-        }
-
-        if (isCanvasBlank(canvas)) {
-          let directCanvas = await renderCanvas(resumeRef.current!, false);
-          if (isCanvasBlank(directCanvas)) {
-            directCanvas = await renderCanvas(resumeRef.current!, true);
-          }
-          if (!isCanvasBlank(directCanvas)) {
-            canvas = directCanvas;
-          }
-        }
-      } finally {
-        snapshot.remove();
-      }
-
-      if (isCanvasBlank(canvas)) {
-        throw new Error(
-          "当前浏览器导出失败，请使用 Chrome/Edge 或系统打印导出。",
-        );
-      }
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "p", unit: "pt", format: "a4" });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      const epsilon = 0.5;
-      const pageCount = Math.max(
-        1,
-        Math.ceil((imgHeight - epsilon) / pdfHeight),
-      );
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-
-      for (let page = 1; page < pageCount; page += 1) {
-        const position = -pdfHeight * page;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      }
-
-      const filename = basics.name ? `${basics.name}-简历.pdf` : "简历.pdf";
-      pdf.save(filename);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "PDF 生成失败，请重试。");
-    } finally {
-      setDownloading(false);
-    }
+  const handleDownload = () => {
+    window.print();
   };
 
   if (booting) {
@@ -1431,10 +1150,9 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
               </button>
               <button
                 onClick={handleDownload}
-                disabled={downloading}
-                className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400"
               >
-                {downloading ? "生成中..." : "下载PDF"}
+                打印
               </button>
               <button
                 onClick={handleLogout}
@@ -1833,7 +1551,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {aiLinks.tools.map((item, index) => {
                 const meta = parseUrlMeta(item);
                 const showInput = canEdit && (!meta || item.trim().length === 0);
@@ -1899,7 +1617,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             titleClassName={template.sectionTitleClass}
             lineClassName={template.sectionLineClass}
           >
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {aiLinks.products.map((item, index) => {
                 const meta = parseUrlMeta(item);
                 const showInput = canEdit && (!meta || item.trim().length === 0);
@@ -2034,4 +1752,3 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     </ResumeReadonlyContext.Provider>
   );
 }
-
