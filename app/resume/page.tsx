@@ -654,6 +654,11 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
   const [showcase, setShowcase] = useState<{ name: string; imageUrl: string; link: string }[]>([]);
   const [social, setSocial] = useState({ github: "", xiaoyuzhou: "", xiaohongshu: "" });
   const [editingCard, setEditingCard] = useState<string | null>(null);
+  const [githubProfile, setGithubProfile] = useState<{
+    login: string; name: string | null; bio: string | null;
+    followers: number; public_repos: number; avatar_url: string;
+  } | null>(null);
+  const [githubLoading, setGithubLoading] = useState(false);
   const [uploadingShowcaseIndex, setUploadingShowcaseIndex] = useState(-1);
   const [structuredResume, setStructuredResume] = useState<Resume>(emptyResume);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
@@ -1118,6 +1123,21 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     if (saved === "dark" || saved === "light") setPageTheme(saved);
     setPageMounted(true);
   }, []);
+
+  useEffect(() => {
+    const username = social.github.replace(/^.*github\.com\//, "").replace(/^@/, "").trim();
+    if (!username) { setGithubProfile(null); return; }
+    const timer = setTimeout(async () => {
+      setGithubLoading(true);
+      try {
+        const res = await fetch(`https://api.github.com/users/${username}`);
+        if (res.ok) setGithubProfile(await res.json());
+        else setGithubProfile(null);
+      } catch { setGithubProfile(null); }
+      finally { setGithubLoading(false); }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [social.github]);
 
   const changePageTheme = (next: "dark" | "light") => {
     setPageTheme(next);
@@ -1879,11 +1899,11 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
 
         {/* GitHub — 左上 */}
         <div
-          className="pointer-events-auto absolute left-6 top-[28%]"
+          className="pointer-events-auto absolute left-6 top-[22%]"
           style={{ animation: "floatCard 5s ease-in-out infinite" }}
         >
           {canEdit && editingCard === "github" ? (
-            <div className="w-44 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lg">
+            <div className="w-52 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lg">
               <div className="mb-1.5 flex items-center gap-2">
                 <Github className="h-4 w-4 text-[#24292e]" />
                 <span className="text-xs font-semibold text-[#24292e]">GitHub</span>
@@ -1897,27 +1917,48 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                 className="w-full rounded border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 outline-none focus:border-slate-400"
               />
             </div>
+          ) : githubProfile ? (
+            /* 有数据时展示富卡片 */
+            <a
+              href={`https://github.com/${githubProfile.login}`}
+              target="_blank" rel="noreferrer"
+              onClick={(e) => { if (canEdit) { e.preventDefault(); setEditingCard("github"); } }}
+              className="block w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg transition hover:shadow-xl hover:-translate-y-0.5"
+            >
+              {/* 头部：头像 + 名字 + bio */}
+              <div className="flex items-start gap-3 px-4 pt-4 pb-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={githubProfile.avatar_url} alt={githubProfile.login} className="h-10 w-10 rounded-full border border-slate-200" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-[#24292e] truncate">{githubProfile.name || githubProfile.login}</p>
+                  {githubProfile.bio ? (
+                    <p className="mt-0.5 text-[10px] text-slate-400 line-clamp-2 leading-relaxed">{githubProfile.bio}</p>
+                  ) : null}
+                </div>
+              </div>
+              {/* 数据行 */}
+              <div className="flex gap-4 border-t border-slate-100 px-4 py-2">
+                <span className="text-[10px] text-slate-500">仓库 <strong className="text-slate-700">{githubProfile.public_repos}</strong></span>
+                <span className="text-[10px] text-slate-500">粉丝 <strong className="text-slate-700">{githubProfile.followers}</strong></span>
+              </div>
+              {/* 贡献图 */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://ghchart.rshah.org/${githubProfile.login}`}
+                alt="contributions"
+                className="w-full px-3 pb-3"
+              />
+            </a>
           ) : (
             <div
               onClick={() => canEdit && setEditingCard("github")}
-              className={`w-44 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lg transition ${canEdit ? "cursor-pointer hover:shadow-xl hover:-translate-y-0.5" : social.github ? "cursor-pointer hover:shadow-xl hover:-translate-y-0.5" : "opacity-30"}`}
+              className={`w-52 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lg transition ${canEdit ? "cursor-pointer hover:shadow-xl hover:-translate-y-0.5" : "opacity-30"}`}
             >
               <div className="mb-1 flex items-center gap-2">
                 <Github className="h-4 w-4 text-[#24292e]" />
                 <span className="text-xs font-semibold text-[#24292e]">GitHub</span>
               </div>
-              {social.github ? (
-                <a
-                  href={`https://github.com/${social.github.replace(/^.*github\.com\//, "").replace(/^@/, "")}`}
-                  target="_blank" rel="noreferrer"
-                  onClick={(e) => { if (canEdit) e.preventDefault(); }}
-                  className="truncate text-[11px] text-slate-500 hover:text-slate-700"
-                >
-                  @{social.github.replace(/^.*github\.com\//, "").replace(/^@/, "")}
-                </a>
-              ) : (
-                <p className="text-[11px] text-slate-300">{canEdit ? "点击填写" : ""}</p>
-              )}
+              <p className="text-[11px] text-slate-300">{githubLoading ? "加载中..." : canEdit ? "点击填写用户名" : ""}</p>
             </div>
           )}
         </div>
