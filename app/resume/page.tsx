@@ -14,10 +14,12 @@ import {
   Briefcase,
   CalendarDays,
   FolderKanban,
+  Github,
   GraduationCap,
   LogOut,
   Mail,
   MapPin,
+  Mic2,
   Moon,
   Phone,
   Sparkles,
@@ -164,6 +166,7 @@ type Resume = {
   aiToolLevels?: string[];
   aiProductLevels?: string[];
   showcase?: { name: string; imageUrl: string; link: string }[];
+  social?: { github?: string; xiaoyuzhou?: string; xiaohongshu?: string };
 };
 
 type ChatApiResponse = {
@@ -649,6 +652,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     useState<EducationLine>(emptyEducationLine);
   const [aiLinks, setAiLinks] = useState<AiLinks>(emptyAiLinks);
   const [showcase, setShowcase] = useState<{ name: string; imageUrl: string; link: string }[]>([]);
+  const [social, setSocial] = useState({ github: "", xiaoyuzhou: "", xiaohongshu: "" });
   const [uploadingShowcaseIndex, setUploadingShowcaseIndex] = useState(-1);
   const [structuredResume, setStructuredResume] = useState<Resume>(emptyResume);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
@@ -769,6 +773,11 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         i === index ? (lv === "了解" ? "熟练" : "了解") : lv,
       ),
     }));
+  };
+
+  const updateSocial = (field: keyof typeof social, value: string) => {
+    if (isReadonly) return;
+    setSocial((prev) => ({ ...prev, [field]: value }));
   };
 
   const addShowcaseItem = () => {
@@ -921,6 +930,11 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
       toolLevels: normalizedTools.map((_, i) => normalizedResume.aiToolLevels?.[i] ?? "熟练"),
       productLevels: normalizedProducts.map((_, i) => normalizedResume.aiProductLevels?.[i] ?? "熟练"),
     });
+    setSocial({
+      github: normalizedResume.social?.github ?? "",
+      xiaoyuzhou: normalizedResume.social?.xiaoyuzhou ?? "",
+      xiaohongshu: normalizedResume.social?.xiaohongshu ?? "",
+    });
     setShowcase(
       Array.isArray(normalizedResume.showcase)
         ? normalizedResume.showcase.map((item) => ({
@@ -952,6 +966,11 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
       aiToolLevels: normalizedAiToolEntries.map((e) => e.level),
       aiProductLevels: normalizedAiProductEntries.map((e) => e.level),
       showcase: showcase.filter((item) => item.imageUrl || item.name),
+      social: {
+        github: social.github.trim(),
+        xiaoyuzhou: social.xiaoyuzhou.trim(),
+        xiaohongshu: social.xiaohongshu.trim(),
+      },
       basics: {
         ...structuredResume.basics,
         ...basics,
@@ -1473,6 +1492,113 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
               </div>
             </div>
           </div>
+
+          {/* 社交主页卡片 */}
+          {(canEdit || social.github || social.xiaoyuzhou || social.xiaohongshu || basics.location) ? (
+            <div className={`grid grid-cols-4 gap-2 ${template.sectionSpacing}`}>
+              {/* GitHub */}
+              <a
+                href={social.github ? `https://github.com/${social.github.replace(/^.*github\.com\//, "").replace(/^@/, "")}` : undefined}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex items-center gap-2 rounded-lg border border-slate-200 bg-[#f6f8fa] px-3 py-2.5 transition hover:border-slate-300 print:hover:border-slate-200"
+                onClick={!social.github && canEdit ? (e) => e.preventDefault() : undefined}
+              >
+                <Github className="h-4 w-4 shrink-0 text-[#24292e]" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-semibold text-[#24292e]">GitHub</p>
+                  {canEdit ? (
+                    <input
+                      value={social.github}
+                      onChange={(e) => updateSocial("github", e.target.value)}
+                      onClick={(e) => e.preventDefault()}
+                      placeholder="用户名"
+                      data-export="exclude"
+                      className="w-full bg-transparent text-[11px] text-slate-500 outline-none placeholder:text-slate-300 print:hidden"
+                    />
+                  ) : null}
+                  {social.github ? (
+                    <p className="truncate text-[11px] text-slate-500 print:block hidden print:block">{social.github.replace(/^.*github\.com\//, "").replace(/^@/, "")}</p>
+                  ) : null}
+                  {!canEdit && social.github ? (
+                    <p className="truncate text-[11px] text-slate-500">{social.github.replace(/^.*github\.com\//, "").replace(/^@/, "")}</p>
+                  ) : null}
+                </div>
+              </a>
+
+              {/* 小宇宙 */}
+              <a
+                href={social.xiaoyuzhou ? `https://www.xiaoyuzhoufm.com/podcast/${social.xiaoyuzhou.replace(/^.*xiaoyuzhoufm\.com\/podcast\//, "")}` : undefined}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 rounded-lg border border-[#e8e0f7] bg-[#f5f0ff] px-3 py-2.5 transition hover:border-[#c9b8f0]"
+                onClick={!social.xiaoyuzhou && canEdit ? (e) => e.preventDefault() : undefined}
+              >
+                <Mic2 className="h-4 w-4 shrink-0 text-[#7c3aed]" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-semibold text-[#5b21b6]">小宇宙</p>
+                  {canEdit ? (
+                    <input
+                      value={social.xiaoyuzhou}
+                      onChange={(e) => updateSocial("xiaoyuzhou", e.target.value)}
+                      onClick={(e) => e.preventDefault()}
+                      placeholder="播客 ID"
+                      data-export="exclude"
+                      className="w-full bg-transparent text-[11px] text-[#7c3aed] outline-none placeholder:text-[#c4b5f4] print:hidden"
+                    />
+                  ) : null}
+                  {!canEdit && social.xiaoyuzhou ? (
+                    <p className="truncate text-[11px] text-[#7c3aed]">{social.xiaoyuzhou}</p>
+                  ) : null}
+                </div>
+              </a>
+
+              {/* 小红书 */}
+              <a
+                href={social.xiaohongshu ? `https://www.xiaohongshu.com/user/profile/${social.xiaohongshu.replace(/^.*profile\//, "").replace(/^@/, "")}` : undefined}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 rounded-lg border border-[#ffd6d6] bg-[#fff5f5] px-3 py-2.5 transition hover:border-[#ffb3b3]"
+                onClick={!social.xiaohongshu && canEdit ? (e) => e.preventDefault() : undefined}
+              >
+                <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <rect width="24" height="24" rx="6" fill="#FF2442" />
+                  <text x="12" y="17" textAnchor="middle" fontSize="13" fontWeight="bold" fill="white">书</text>
+                </svg>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-semibold text-[#cc0a2f]">小红书</p>
+                  {canEdit ? (
+                    <input
+                      value={social.xiaohongshu}
+                      onChange={(e) => updateSocial("xiaohongshu", e.target.value)}
+                      onClick={(e) => e.preventDefault()}
+                      placeholder="用户 ID"
+                      data-export="exclude"
+                      className="w-full bg-transparent text-[11px] text-[#cc0a2f] outline-none placeholder:text-[#ffb3b3] print:hidden"
+                    />
+                  ) : null}
+                  {!canEdit && social.xiaohongshu ? (
+                    <p className="truncate text-[11px] text-[#cc0a2f]">{social.xiaohongshu}</p>
+                  ) : null}
+                </div>
+              </a>
+
+              {/* 位置 */}
+              <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+                <MapPin className="h-4 w-4 shrink-0 text-slate-500" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-semibold text-slate-600">所在地</p>
+                  <EditableBlock
+                    value={basics.location}
+                    onChange={(value) => updateBasics("location", value)}
+                    placeholder="城市"
+                    className="text-[11px] text-slate-500"
+                    singleLine
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           <Section
             title="专业技能"
