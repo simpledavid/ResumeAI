@@ -1206,7 +1206,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         className={`min-h-screen print:min-h-0 text-slate-900 ${bodyFont.variable} ${headingFont.variable} ${pageMounted ? "" : "invisible"}`}
         style={{ backgroundColor: pageBg }}
       >
-        <div className="mx-auto flex max-w-[900px] flex-col gap-4 px-4 py-6 print:max-w-none print:px-0 print:py-0 print:gap-0">
+        <div className="mx-auto flex max-w-[210mm] flex-col gap-4 py-6 print:max-w-none print:py-0 print:gap-0">
           {canEdit ? (
             <div className="flex flex-wrap items-center justify-end gap-2 text-sm print:hidden">
               {savedAt ? (
@@ -1465,7 +1465,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                                 data-export="exclude"
                                 className="rounded border border-slate-300 bg-white px-2 py-0.5 text-xs text-slate-500 transition hover:border-slate-400"
                               >
-                                删除
+                                ×
                               </button>
                             ) : null}
                           </div>
@@ -1488,7 +1488,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                     data-export="exclude"
                     className="mt-3 rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
                   >
-                    增加
+                    +
                   </button>
                 ) : null}
               </>
@@ -1531,7 +1531,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                             data-export="exclude"
                             className="rounded border border-slate-300 bg-white px-2 py-0.5 text-xs text-slate-500 transition hover:border-slate-400"
                           >
-                            删除
+                            ×
                           </button>
                         ) : null}
                       </div>
@@ -1553,7 +1553,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                     data-export="exclude"
                     className="mt-3 rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
                   >
-                    增加
+                    +
                   </button>
                 ) : null}
               </>
@@ -1602,7 +1602,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                         data-export="exclude"
                         className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-500 transition hover:border-slate-400"
                       >
-                        删除
+                        ×
                       </button>
                     ) : null}
                   </div>
@@ -1615,7 +1615,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   data-export="exclude"
                   className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
                 >
-                  增加
+                  +
                 </button>
               ) : null}
             </div>
@@ -1684,7 +1684,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   data-export="exclude"
                   className="flex min-h-10 items-center justify-center rounded border border-dashed border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
                 >
-                  增加
+                  +
                 </button>
               ) : null}
             </div>
@@ -1753,7 +1753,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
                   data-export="exclude"
                   className="flex min-h-10 items-center justify-center rounded border border-dashed border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:border-slate-400"
                 >
-                  增加
+                  +
                 </button>
               ) : null}
             </div>
