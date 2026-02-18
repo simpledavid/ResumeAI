@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Github, Lock, Moon, Printer, Share2, Sparkles, Sun, UserRound } from "lucide-react";
@@ -64,8 +63,9 @@ const FEATURES = [
   { icon: Share2,   label: "一键公开分享" },
 ];
 
-export default function AuthPage({ mode }: { mode: AuthMode }) {
+export default function AuthPage({ mode: initialMode }: { mode: AuthMode }) {
   const router = useRouter();
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   // mounted 用于防止主题读取前的闪烁
   const [mounted, setMounted] = useState(false);
@@ -276,8 +276,9 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
                 RESUMIO
               </p>
               <div className={authSwitchClassName}>
-                <Link
-                  href="/login"
+                <button
+                  type="button"
+                  onClick={() => { setMode("login"); window.history.replaceState({}, "", "/login"); }}
                   className={`rounded-full px-3 py-1 text-xs transition ${
                     isLogin
                       ? "bg-[#ff9d23] text-[#15110a]"
@@ -285,9 +286,10 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
                   }`}
                 >
                   登录
-                </Link>
-                <Link
-                  href="/register"
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMode("register"); window.history.replaceState({}, "", "/register"); }}
                   className={`rounded-full px-3 py-1 text-xs transition ${
                     isLogin
                       ? authSwitchInactiveClassName
@@ -295,7 +297,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
                   }`}
                 >
                   注册
-                </Link>
+                </button>
               </div>
             </header>
 
