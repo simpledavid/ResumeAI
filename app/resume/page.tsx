@@ -1895,7 +1895,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
       </div>
 
       {/* 浮动社交卡片 — 仅大屏显示，打印隐藏 */}
-      <div className="pointer-events-none fixed inset-0 hidden xl:block print:hidden" data-export="exclude" aria-hidden>
+      <div className="pointer-events-none fixed inset-0 hidden lg:block print:hidden" data-export="exclude" aria-hidden>
 
         {/* GitHub — 左上 */}
         <div
@@ -1903,19 +1903,38 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
           style={{ animation: "floatCard 5s ease-in-out infinite" }}
         >
           {canEdit && editingCard === "github" ? (
-            <div className="w-52 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lg">
-              <div className="mb-1.5 flex items-center gap-2">
-                <Github className="h-4 w-4 text-[#24292e]" />
-                <span className="text-xs font-semibold text-[#24292e]">GitHub</span>
+            <div className="w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+              <div className="px-4 pt-3 pb-2">
+                <div className="mb-1.5 flex items-center gap-2">
+                  <Github className="h-4 w-4 text-[#24292e]" />
+                  <span className="text-xs font-semibold text-[#24292e]">GitHub</span>
+                </div>
+                <input
+                  autoFocus
+                  value={social.github}
+                  onChange={(e) => updateSocial("github", e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingCard(null); }}
+                  placeholder="用户名 / 完整链接"
+                  className="w-full rounded border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 outline-none focus:border-slate-400"
+                />
+                {githubLoading && (
+                  <p className="mt-1.5 text-[10px] text-slate-400">获取中...</p>
+                )}
+                {githubProfile && !githubLoading && (
+                  <div className="mt-2 flex items-center gap-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={githubProfile.avatar_url} className="h-6 w-6 rounded-full border border-slate-200" alt="" />
+                    <p className="truncate text-[10px] font-medium text-slate-600">{githubProfile.name || githubProfile.login}</p>
+                  </div>
+                )}
               </div>
-              <input
-                autoFocus
-                value={social.github}
-                onChange={(e) => updateSocial("github", e.target.value)}
-                onBlur={() => setEditingCard(null)}
-                placeholder="用户名"
-                className="w-full rounded border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 outline-none focus:border-slate-400"
-              />
+              <button
+                className="w-full border-t border-slate-100 py-1.5 text-[10px] text-slate-400 transition hover:bg-slate-50 hover:text-slate-600"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setEditingCard(null)}
+              >
+                确认
+              </button>
             </div>
           ) : githubProfile ? (
             /* 有数据时展示富卡片 */
