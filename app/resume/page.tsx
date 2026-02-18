@@ -1166,6 +1166,8 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     setDownloading(true);
     setError("");
     try {
+      const A4_WIDTH_MM = 210;
+      const A4_HEIGHT_MM = 297;
       if (document.fonts?.ready) {
         await document.fonts.ready;
       }
@@ -1204,8 +1206,11 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         clone.style.borderColor = template.border;
         clone.style.setProperty("--accent", template.accent);
         clone.style.setProperty("--line", template.line);
-        clone.style.width = `${original.offsetWidth}px`;
-        clone.style.minHeight = `${original.offsetHeight}px`;
+        clone.style.width = `${A4_WIDTH_MM}mm`;
+        clone.style.maxWidth = `${A4_WIDTH_MM}mm`;
+        clone.style.minWidth = `${A4_WIDTH_MM}mm`;
+        clone.style.minHeight = `${A4_HEIGHT_MM}mm`;
+        clone.style.boxSizing = "border-box";
         clone.querySelectorAll("[contenteditable]").forEach((node) => {
           node.removeAttribute("contenteditable");
           node.removeAttribute("data-placeholder");
@@ -1228,6 +1233,10 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             scale: 2,
             backgroundColor: template.resumeBg,
             useCORS: true,
+            width: target.scrollWidth,
+            height: target.scrollHeight,
+            windowWidth: target.scrollWidth,
+            windowHeight: target.scrollHeight,
             foreignObjectRendering: useForeignObject,
             onclone: (doc) => {
               const root = doc.querySelector(
@@ -1354,21 +1363,21 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         );
       }
       const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "p", unit: "pt", format: "a4" });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+      const pageWidth = A4_WIDTH_MM;
+      const pageHeight = A4_HEIGHT_MM;
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * pageWidth) / canvas.width;
 
       const epsilon = 0.5;
       const pageCount = Math.max(
         1,
-        Math.ceil((imgHeight - epsilon) / pdfHeight),
+        Math.ceil((imgHeight - epsilon) / pageHeight),
       );
       pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
 
       for (let page = 1; page < pageCount; page += 1) {
-        const position = -pdfHeight * page;
+        const position = -pageHeight * page;
         pdf.addPage();
         pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
       }
