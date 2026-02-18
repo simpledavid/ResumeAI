@@ -653,6 +653,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
   const [aiLinks, setAiLinks] = useState<AiLinks>(emptyAiLinks);
   const [showcase, setShowcase] = useState<{ name: string; imageUrl: string; link: string }[]>([]);
   const [social, setSocial] = useState({ github: "", xiaoyuzhou: "", xiaohongshu: "" });
+  const [editingCard, setEditingCard] = useState<string | null>(null);
   const [uploadingShowcaseIndex, setUploadingShowcaseIndex] = useState(-1);
   const [structuredResume, setStructuredResume] = useState<Resume>(emptyResume);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
@@ -1493,113 +1494,6 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             </div>
           </div>
 
-          {/* 社交主页卡片 */}
-          {(canEdit || social.github || social.xiaoyuzhou || social.xiaohongshu || basics.location) ? (
-            <div className={`grid grid-cols-4 gap-2 ${template.sectionSpacing}`}>
-              {/* GitHub */}
-              <a
-                href={social.github ? `https://github.com/${social.github.replace(/^.*github\.com\//, "").replace(/^@/, "")}` : undefined}
-                target="_blank"
-                rel="noreferrer"
-                className="group flex items-center gap-2 rounded-lg border border-slate-200 bg-[#f6f8fa] px-3 py-2.5 transition hover:border-slate-300 print:hover:border-slate-200"
-                onClick={!social.github && canEdit ? (e) => e.preventDefault() : undefined}
-              >
-                <Github className="h-4 w-4 shrink-0 text-[#24292e]" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-semibold text-[#24292e]">GitHub</p>
-                  {canEdit ? (
-                    <input
-                      value={social.github}
-                      onChange={(e) => updateSocial("github", e.target.value)}
-                      onClick={(e) => e.preventDefault()}
-                      placeholder="用户名"
-                      data-export="exclude"
-                      className="w-full bg-transparent text-[11px] text-slate-500 outline-none placeholder:text-slate-300 print:hidden"
-                    />
-                  ) : null}
-                  {social.github ? (
-                    <p className="truncate text-[11px] text-slate-500 print:block hidden print:block">{social.github.replace(/^.*github\.com\//, "").replace(/^@/, "")}</p>
-                  ) : null}
-                  {!canEdit && social.github ? (
-                    <p className="truncate text-[11px] text-slate-500">{social.github.replace(/^.*github\.com\//, "").replace(/^@/, "")}</p>
-                  ) : null}
-                </div>
-              </a>
-
-              {/* 小宇宙 */}
-              <a
-                href={social.xiaoyuzhou ? `https://www.xiaoyuzhoufm.com/podcast/${social.xiaoyuzhou.replace(/^.*xiaoyuzhoufm\.com\/podcast\//, "")}` : undefined}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 rounded-lg border border-[#e8e0f7] bg-[#f5f0ff] px-3 py-2.5 transition hover:border-[#c9b8f0]"
-                onClick={!social.xiaoyuzhou && canEdit ? (e) => e.preventDefault() : undefined}
-              >
-                <Mic2 className="h-4 w-4 shrink-0 text-[#7c3aed]" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-semibold text-[#5b21b6]">小宇宙</p>
-                  {canEdit ? (
-                    <input
-                      value={social.xiaoyuzhou}
-                      onChange={(e) => updateSocial("xiaoyuzhou", e.target.value)}
-                      onClick={(e) => e.preventDefault()}
-                      placeholder="播客 ID"
-                      data-export="exclude"
-                      className="w-full bg-transparent text-[11px] text-[#7c3aed] outline-none placeholder:text-[#c4b5f4] print:hidden"
-                    />
-                  ) : null}
-                  {!canEdit && social.xiaoyuzhou ? (
-                    <p className="truncate text-[11px] text-[#7c3aed]">{social.xiaoyuzhou}</p>
-                  ) : null}
-                </div>
-              </a>
-
-              {/* 小红书 */}
-              <a
-                href={social.xiaohongshu ? `https://www.xiaohongshu.com/user/profile/${social.xiaohongshu.replace(/^.*profile\//, "").replace(/^@/, "")}` : undefined}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 rounded-lg border border-[#ffd6d6] bg-[#fff5f5] px-3 py-2.5 transition hover:border-[#ffb3b3]"
-                onClick={!social.xiaohongshu && canEdit ? (e) => e.preventDefault() : undefined}
-              >
-                <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <rect width="24" height="24" rx="6" fill="#FF2442" />
-                  <text x="12" y="17" textAnchor="middle" fontSize="13" fontWeight="bold" fill="white">书</text>
-                </svg>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-semibold text-[#cc0a2f]">小红书</p>
-                  {canEdit ? (
-                    <input
-                      value={social.xiaohongshu}
-                      onChange={(e) => updateSocial("xiaohongshu", e.target.value)}
-                      onClick={(e) => e.preventDefault()}
-                      placeholder="用户 ID"
-                      data-export="exclude"
-                      className="w-full bg-transparent text-[11px] text-[#cc0a2f] outline-none placeholder:text-[#ffb3b3] print:hidden"
-                    />
-                  ) : null}
-                  {!canEdit && social.xiaohongshu ? (
-                    <p className="truncate text-[11px] text-[#cc0a2f]">{social.xiaohongshu}</p>
-                  ) : null}
-                </div>
-              </a>
-
-              {/* 位置 */}
-              <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
-                <MapPin className="h-4 w-4 shrink-0 text-slate-500" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-semibold text-slate-600">所在地</p>
-                  <EditableBlock
-                    value={basics.location}
-                    onChange={(value) => updateBasics("location", value)}
-                    placeholder="城市"
-                    className="text-[11px] text-slate-500"
-                    singleLine
-                  />
-                </div>
-              </div>
-            </div>
-          ) : null}
-
           <Section
             title="专业技能"
             icon={Wrench}
@@ -1976,8 +1870,164 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             </Section>
           ) : null}
 
-          
+
         </div>
+      </div>
+
+      {/* 浮动社交卡片 — 仅大屏显示，打印隐藏 */}
+      <div className="pointer-events-none fixed inset-0 hidden xl:block print:hidden" data-export="exclude" aria-hidden>
+
+        {/* GitHub — 左上 */}
+        <div
+          className="pointer-events-auto absolute left-6 top-[28%]"
+          style={{ animation: "floatCard 5s ease-in-out infinite" }}
+        >
+          {canEdit && editingCard === "github" ? (
+            <div className="w-44 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lg">
+              <div className="mb-1.5 flex items-center gap-2">
+                <Github className="h-4 w-4 text-[#24292e]" />
+                <span className="text-xs font-semibold text-[#24292e]">GitHub</span>
+              </div>
+              <input
+                autoFocus
+                value={social.github}
+                onChange={(e) => updateSocial("github", e.target.value)}
+                onBlur={() => setEditingCard(null)}
+                placeholder="用户名"
+                className="w-full rounded border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 outline-none focus:border-slate-400"
+              />
+            </div>
+          ) : (
+            <div
+              onClick={() => canEdit && setEditingCard("github")}
+              className={`w-44 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lg transition ${canEdit ? "cursor-pointer hover:shadow-xl hover:-translate-y-0.5" : social.github ? "cursor-pointer hover:shadow-xl hover:-translate-y-0.5" : "opacity-30"}`}
+            >
+              <div className="mb-1 flex items-center gap-2">
+                <Github className="h-4 w-4 text-[#24292e]" />
+                <span className="text-xs font-semibold text-[#24292e]">GitHub</span>
+              </div>
+              {social.github ? (
+                <a
+                  href={`https://github.com/${social.github.replace(/^.*github\.com\//, "").replace(/^@/, "")}`}
+                  target="_blank" rel="noreferrer"
+                  onClick={(e) => { if (canEdit) e.preventDefault(); }}
+                  className="truncate text-[11px] text-slate-500 hover:text-slate-700"
+                >
+                  @{social.github.replace(/^.*github\.com\//, "").replace(/^@/, "")}
+                </a>
+              ) : (
+                <p className="text-[11px] text-slate-300">{canEdit ? "点击填写" : ""}</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 位置 — 左下 */}
+        <div
+          className="pointer-events-auto absolute left-6 top-[52%]"
+          style={{ animation: "floatCard 6s ease-in-out infinite", animationDelay: "1s" }}
+        >
+          <div className="w-44 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lg">
+            <div className="mb-1 flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-slate-500" />
+              <span className="text-xs font-semibold text-slate-600">所在地</span>
+            </div>
+            <p className={`truncate text-[11px] ${basics.location ? "text-slate-500" : "text-slate-300"}`}>
+              {basics.location || (canEdit ? "在简历里填写" : "")}
+            </p>
+          </div>
+        </div>
+
+        {/* 小宇宙 — 右上 */}
+        <div
+          className="pointer-events-auto absolute right-6 top-[28%]"
+          style={{ animation: "floatCard 5.5s ease-in-out infinite", animationDelay: "0.5s" }}
+        >
+          {canEdit && editingCard === "xiaoyuzhou" ? (
+            <div className="w-44 rounded-2xl border border-[#e8e0f7] bg-[#faf5ff] px-4 py-3 shadow-lg">
+              <div className="mb-1.5 flex items-center gap-2">
+                <Mic2 className="h-4 w-4 text-[#7c3aed]" />
+                <span className="text-xs font-semibold text-[#5b21b6]">小宇宙</span>
+              </div>
+              <input
+                autoFocus
+                value={social.xiaoyuzhou}
+                onChange={(e) => updateSocial("xiaoyuzhou", e.target.value)}
+                onBlur={() => setEditingCard(null)}
+                placeholder="播客 ID"
+                className="w-full rounded border border-[#e8e0f7] bg-[#f5f0ff] px-2 py-1 text-xs text-[#7c3aed] outline-none focus:border-[#a78bfa]"
+              />
+            </div>
+          ) : (
+            <div
+              onClick={() => canEdit && setEditingCard("xiaoyuzhou")}
+              className={`w-44 rounded-2xl border border-[#e8e0f7] bg-[#faf5ff] px-4 py-3 shadow-lg transition ${canEdit ? "cursor-pointer hover:shadow-xl hover:-translate-y-0.5" : social.xiaoyuzhou ? "cursor-pointer hover:shadow-xl hover:-translate-y-0.5" : "opacity-30"}`}
+            >
+              <div className="mb-1 flex items-center gap-2">
+                <Mic2 className="h-4 w-4 text-[#7c3aed]" />
+                <span className="text-xs font-semibold text-[#5b21b6]">小宇宙</span>
+              </div>
+              {social.xiaoyuzhou ? (
+                <a
+                  href={`https://www.xiaoyuzhoufm.com/podcast/${social.xiaoyuzhou}`}
+                  target="_blank" rel="noreferrer"
+                  onClick={(e) => { if (canEdit) e.preventDefault(); }}
+                  className="truncate text-[11px] text-[#7c3aed] hover:text-[#5b21b6]"
+                >
+                  {social.xiaoyuzhou}
+                </a>
+              ) : (
+                <p className="text-[11px] text-[#c4b5f4]">{canEdit ? "点击填写" : ""}</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 小红书 — 右下 */}
+        <div
+          className="pointer-events-auto absolute right-6 top-[52%]"
+          style={{ animation: "floatCard 6.5s ease-in-out infinite", animationDelay: "1.5s" }}
+        >
+          {canEdit && editingCard === "xiaohongshu" ? (
+            <div className="w-44 rounded-2xl border border-[#ffd6d6] bg-[#fff5f5] px-4 py-3 shadow-lg">
+              <div className="mb-1.5 flex items-center gap-2">
+                <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden><rect width="24" height="24" rx="6" fill="#FF2442" /><text x="12" y="17" textAnchor="middle" fontSize="13" fontWeight="bold" fill="white">书</text></svg>
+                <span className="text-xs font-semibold text-[#cc0a2f]">小红书</span>
+              </div>
+              <input
+                autoFocus
+                value={social.xiaohongshu}
+                onChange={(e) => updateSocial("xiaohongshu", e.target.value)}
+                onBlur={() => setEditingCard(null)}
+                placeholder="用户 ID"
+                className="w-full rounded border border-[#ffd6d6] bg-[#fff0f0] px-2 py-1 text-xs text-[#cc0a2f] outline-none focus:border-[#ffb3b3]"
+              />
+            </div>
+          ) : (
+            <div
+              onClick={() => canEdit && setEditingCard("xiaohongshu")}
+              className={`w-44 rounded-2xl border border-[#ffd6d6] bg-[#fff5f5] px-4 py-3 shadow-lg transition ${canEdit ? "cursor-pointer hover:shadow-xl hover:-translate-y-0.5" : social.xiaohongshu ? "cursor-pointer hover:shadow-xl hover:-translate-y-0.5" : "opacity-30"}`}
+            >
+              <div className="mb-1 flex items-center gap-2">
+                <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden><rect width="24" height="24" rx="6" fill="#FF2442" /><text x="12" y="17" textAnchor="middle" fontSize="13" fontWeight="bold" fill="white">书</text></svg>
+                <span className="text-xs font-semibold text-[#cc0a2f]">小红书</span>
+              </div>
+              {social.xiaohongshu ? (
+                <a
+                  href={`https://www.xiaohongshu.com/user/profile/${social.xiaohongshu}`}
+                  target="_blank" rel="noreferrer"
+                  onClick={(e) => { if (canEdit) e.preventDefault(); }}
+                  className="truncate text-[11px] text-[#cc0a2f] hover:text-[#990820]"
+                >
+                  @{social.xiaohongshu}
+                </a>
+              ) : (
+                <p className="text-[11px] text-[#ffb3b3]">{canEdit ? "点击填写" : ""}</p>
+              )}
+            </div>
+          )}
+        </div>
+
       </div>
 
         <style jsx>{`
