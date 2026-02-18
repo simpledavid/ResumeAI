@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Github, Lock, UserRound } from "lucide-react";
+import { Eye, EyeOff, Github, Lock, UserRound, Sparkles, Printer, Share2 } from "lucide-react";
 import { Press_Start_2P } from "next/font/google";
 
 const pixelFont = Press_Start_2P({
@@ -58,9 +58,17 @@ const GoogleIcon = () => (
 const usernamePattern = /^[a-z0-9_-]{3,24}$/;
 const HERO_TEXT = "AI时代的简历";
 
+const FEATURES = [
+  { icon: Sparkles, label: "AI 一键润色" },
+  { icon: Printer,  label: "A4 完美打印" },
+  { icon: Share2,   label: "链接公开分享" },
+];
+
 export default function AuthPage({ mode }: { mode: AuthMode }) {
   const router = useRouter();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  // mounted 用于防止主题读取前的闪烁
+  const [mounted, setMounted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -78,11 +86,13 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
   const isLightTheme = theme === "light";
   const typedHeroText = HERO_TEXT.slice(0, typingIndex);
 
+  // 读取保存的主题，读完后才显示页面，避免深色→浅色闪烁
   useEffect(() => {
     const saved = window.localStorage.getItem("auth-theme");
     if (saved === "dark" || saved === "light") {
       setTheme(saved);
     }
+    setMounted(true);
   }, []);
 
   useEffect(() => {
@@ -185,8 +195,8 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     ? "relative min-h-screen overflow-hidden bg-[#ffffff] px-4 py-8 text-[#111827]"
     : "relative min-h-screen overflow-hidden bg-[#000000] px-4 py-8 text-[#f5f5f5]";
   const gridClassName = isLightTheme
-    ? "pointer-events-none absolute inset-0 opacity-[0.38] [background-image:linear-gradient(rgba(17,24,39,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(17,24,39,0.06)_1px,transparent_1px)] [background-size:14px_14px]"
-    : "pointer-events-none absolute inset-0 opacity-[0.09] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:14px_14px]";
+    ? "pointer-events-none absolute inset-0 [background-image:linear-gradient(rgba(17,24,39,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(17,24,39,0.07)_1px,transparent_1px)] [background-size:14px_14px]"
+    : "pointer-events-none absolute inset-0 [background-image:linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.1)_1px,transparent_1px)] [background-size:14px_14px]";
   const cardClassName = isLightTheme
     ? "relative rounded-[26px] border border-[#e5e7eb] bg-[#ffffff]/95 p-6 shadow-[0_22px_60px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:p-7"
     : "relative rounded-[26px] border border-[#1d1d1d] bg-[#090909]/95 p-6 shadow-[0_36px_90px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:p-7";
@@ -221,11 +231,17 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     ? "flex h-11 items-center justify-center gap-2 rounded-xl border border-[#d4d4d8] bg-[#ffffff] text-sm text-[#374151] transition hover:border-[#ff9d23] hover:text-[#c26a00]"
     : "flex h-11 items-center justify-center gap-2 rounded-xl border border-[#2a2a2a] bg-[#101010] text-sm text-[#dbdbdb] transition hover:border-[#ff9d23] hover:text-[#ffd18a]";
   const heroClassName = isLightTheme
-    ? "mb-8 text-center text-[34px] font-semibold leading-tight tracking-tight text-[#111827] sm:mb-10 sm:text-[56px]"
-    : "mb-8 text-center text-[34px] font-semibold leading-tight tracking-tight text-[#f5f5f5] sm:mb-10 sm:text-[56px]";
+    ? "text-[34px] font-semibold leading-tight tracking-tight text-[#111827] sm:text-[52px]"
+    : "text-[34px] font-semibold leading-tight tracking-tight text-[#f5f5f5] sm:text-[52px]";
+  const subtitleClassName = isLightTheme
+    ? "mt-3 text-sm text-[#6b7280] sm:text-base"
+    : "mt-3 text-sm text-[#737373] sm:text-base";
+  const featureTagClassName = isLightTheme
+    ? "flex items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-[#f9fafb] px-3 py-1 text-xs text-[#4b5563]"
+    : "flex items-center gap-1.5 rounded-full border border-[#252525] bg-[#0f0f0f] px-3 py-1 text-xs text-[#a3a3a3]";
 
   return (
-    <main className={pageClassName}>
+    <main className={`${pageClassName} ${mounted ? "" : "invisible"}`}>
       <div className={gridClassName} />
 
       <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
@@ -256,10 +272,22 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
       </div>
 
       <div className="relative z-10 flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center">
-        <h1 className={heroClassName}>
-          {typedHeroText}
-          <span className="ml-1 inline-block w-[0.6ch] animate-pulse">|</span>
-        </h1>
+        {/* Hero */}
+        <div className="mb-8 text-center sm:mb-10">
+          <h1 className={heroClassName}>
+            {typedHeroText}
+            <span className="ml-1 inline-block w-[0.6ch] animate-pulse">|</span>
+          </h1>
+          <p className={subtitleClassName}>三分钟生成，AI 润色，A4 打印，一键分享</p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            {FEATURES.map(({ icon: Icon, label }) => (
+              <span key={label} className={featureTagClassName}>
+                <Icon className="h-3 w-3 text-[#ff9d23]" aria-hidden />
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
 
         <div className="w-full max-w-[560px]">
           <section className={cardClassName}>
@@ -436,4 +464,3 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     </main>
   );
 }
-
