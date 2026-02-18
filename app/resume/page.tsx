@@ -18,8 +18,10 @@ import {
   LogOut,
   Mail,
   MapPin,
+  Moon,
   Phone,
   Sparkles,
+  Sun,
   Target,
   UserRound,
   VenusAndMars,
@@ -644,6 +646,8 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
   const [assistantMessage, setAssistantMessage] = useState("");
   const [templateId, setTemplateId] = useState<TemplateId>("minimal");
   const [canEdit, setCanEdit] = useState(!isPublicRoute);
+  const [pageTheme, setPageTheme] = useState<"dark" | "light">("light");
+  const [pageMounted, setPageMounted] = useState(false);
   const resumeRef = useRef<HTMLDivElement | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -1009,6 +1013,17 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     };
   }, [isPublicRoute, profileUsername, router]);
 
+  useEffect(() => {
+    const saved = window.localStorage.getItem("resume-theme");
+    if (saved === "dark" || saved === "light") setPageTheme(saved);
+    setPageMounted(true);
+  }, []);
+
+  const changePageTheme = (next: "dark" | "light") => {
+    setPageTheme(next);
+    window.localStorage.setItem("resume-theme", next);
+  };
+
   const handleSave = async () => {
     if (isReadonly || saving) return;
     setSaving(true);
@@ -1169,54 +1184,77 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     );
   }
 
+  const isDark = pageTheme === "dark";
+  const pageBg = isDark ? "#0a0a0a" : template.pageBg;
+  const btnBase = isDark
+    ? "rounded border border-[#2a2a2a] bg-[#111] px-3 py-1.5 text-sm text-[#d4d4d4] transition hover:border-[#444] disabled:cursor-not-allowed disabled:opacity-50"
+    : "rounded border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60";
+  const btnAi = isDark
+    ? "rounded border border-[#ff9d23]/50 bg-[#130e00] px-3 py-1.5 text-sm text-[#ff9d23] transition hover:border-[#ff9d23]/80 disabled:cursor-not-allowed disabled:opacity-50"
+    : "rounded border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm text-amber-700 transition hover:border-amber-300 disabled:cursor-not-allowed disabled:opacity-60";
+  const btnIcon = isDark
+    ? "flex h-9 w-9 items-center justify-center rounded border border-[#2a2a2a] bg-[#111] text-[#888] transition hover:border-[#444] hover:text-[#ccc]"
+    : "flex h-9 w-9 items-center justify-center rounded border border-slate-200 bg-white text-slate-500 transition hover:border-slate-400 hover:text-slate-700";
+  const msgBox = isDark
+    ? "rounded border border-[#2a2a2a] bg-[#111] px-3 py-2 text-sm text-[#d4d4d4] print:hidden"
+    : "rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 print:hidden";
+
   return (
     <ResumeReadonlyContext.Provider value={isReadonly}>
       <div
         id="resume-page"
-        className={`min-h-screen print:min-h-0 text-slate-900 ${bodyFont.variable} ${headingFont.variable}`}
-        style={{ backgroundColor: template.pageBg }}
+        className={`min-h-screen print:min-h-0 text-slate-900 ${bodyFont.variable} ${headingFont.variable} ${pageMounted ? "" : "invisible"}`}
+        style={{ backgroundColor: pageBg }}
       >
         <div className="mx-auto flex max-w-[900px] flex-col gap-4 px-4 py-6 print:max-w-none print:px-0 print:py-0 print:gap-0">
           {canEdit ? (
-            <div className="flex flex-wrap items-center justify-end gap-2 text-sm text-slate-600 print:hidden">
+            <div className="flex flex-wrap items-center justify-end gap-2 text-sm print:hidden">
               {username ? (
                 <a
                   href={`/${username}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700 transition hover:border-slate-400"
+                  className={`rounded border px-2.5 py-1 text-xs transition ${isDark ? "border-[#2a2a2a] bg-[#111] text-[#888] hover:border-[#444] hover:text-[#ccc]" : "border-slate-200 bg-white text-slate-500 hover:border-slate-400 hover:text-slate-700"}`}
                 >
                   /{username}
                 </a>
               ) : null}
               {savedAt ? (
-                <span className="text-xs text-slate-500">
+                <span className={`text-xs ${isDark ? "text-[#555]" : "text-slate-400"}`}>
                   已保存 {new Date(savedAt).toLocaleTimeString("zh-CN")}
                 </span>
               ) : null}
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className={btnBase}
               >
                 {saving ? "保存中..." : "保存"}
               </button>
               <button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className={btnAi}
               >
                 {loading ? "AI润色中..." : "AI润色"}
               </button>
               <button
                 onClick={handleDownload}
-                className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400"
+                className={btnBase}
               >
                 打印
               </button>
               <button
+                onClick={() => changePageTheme(isDark ? "light" : "dark")}
+                className={btnIcon}
+                aria-label={isDark ? "切换浅色" : "切换深色"}
+                title={isDark ? "切换浅色" : "切换深色"}
+              >
+                {isDark ? <Sun className="h-4 w-4" aria-hidden /> : <Moon className="h-4 w-4" aria-hidden />}
+              </button>
+              <button
                 onClick={handleLogout}
-                className="flex h-9 w-9 items-center justify-center rounded border border-slate-300 bg-white text-slate-700 transition hover:border-slate-400"
+                className={btnIcon}
                 aria-label="退出登录"
                 title="退出登录"
               >
@@ -1227,14 +1265,14 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             <div className="flex justify-end print:hidden" data-export="exclude">
               <a
                 href="/register"
-                className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400"
+                className={btnBase}
               >
                 创建我的resumio
               </a>
             </div>
           ) : null}
           {((canEdit && assistantMessage) || error) && (
-            <div className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 print:hidden">
+            <div className={msgBox}>
               {canEdit && assistantMessage && <p>{assistantMessage}</p>}
               {error && <p className="text-rose-600">{error}</p>}
             </div>

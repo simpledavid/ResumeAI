@@ -25,6 +25,15 @@ body {
   font-family: var(--font-geist-sans);
 }
 
+/* 修复深色主题下浏览器 autofill 覆盖背景色的问题 */
+[data-theme="dark"] input:-webkit-autofill,
+[data-theme="dark"] input:-webkit-autofill:hover,
+[data-theme="dark"] input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #101010 inset !important;
+  -webkit-text-fill-color: #f5f5f5 !important;
+  caret-color: #f5f5f5;
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;

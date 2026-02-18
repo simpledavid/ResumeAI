@@ -59,9 +59,9 @@ const usernamePattern = /^[a-z0-9_-]{3,24}$/;
 const HERO_TEXT = "AI时代的简历";
 
 const FEATURES = [
-  { icon: Sparkles, label: "AI 一键润色" },
-  { icon: Printer,  label: "A4 完美打印" },
-  { icon: Share2,   label: "链接公开分享" },
+  { icon: Sparkles, label: "AI 润色" },
+  { icon: Printer,  label: "A4 打印" },
+  { icon: Share2,   label: "一键公开分享" },
 ];
 
 export default function AuthPage({ mode }: { mode: AuthMode }) {
@@ -233,15 +233,12 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
   const heroClassName = isLightTheme
     ? "text-[34px] font-semibold leading-tight tracking-tight text-[#111827] sm:text-[52px]"
     : "text-[34px] font-semibold leading-tight tracking-tight text-[#f5f5f5] sm:text-[52px]";
-  const subtitleClassName = isLightTheme
-    ? "mt-3 text-sm text-[#6b7280] sm:text-base"
-    : "mt-3 text-sm text-[#737373] sm:text-base";
   const featureTagClassName = isLightTheme
     ? "flex items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-[#f9fafb] px-3 py-1 text-xs text-[#4b5563]"
     : "flex items-center gap-1.5 rounded-full border border-[#252525] bg-[#0f0f0f] px-3 py-1 text-xs text-[#a3a3a3]";
 
   return (
-    <main className={`${pageClassName} ${mounted ? "" : "invisible"}`}>
+    <main data-theme={mounted ? theme : "dark"} className={`${pageClassName} ${mounted ? "" : "invisible"}`}>
       <div className={gridClassName} />
 
       <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
@@ -278,7 +275,6 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
             {typedHeroText}
             <span className="ml-1 inline-block w-[0.6ch] animate-pulse">|</span>
           </h1>
-          <p className={subtitleClassName}>三分钟生成，AI 润色，A4 打印，一键分享</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             {FEATURES.map(({ icon: Icon, label }) => (
               <span key={label} className={featureTagClassName}>
