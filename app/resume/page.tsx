@@ -523,6 +523,7 @@ function Section({
   className,
   titleClassName,
   lineClassName,
+  tip,
 }: {
   title: string;
   icon: typeof Wrench;
@@ -530,6 +531,7 @@ function Section({
   className?: string;
   titleClassName?: string;
   lineClassName?: string;
+  tip?: string;
 }) {
   return (
     <section className={className ?? ""}>
@@ -545,6 +547,11 @@ function Section({
           className={`flex-1 ${lineClassName ?? "h-px"}`}
           style={{ backgroundColor: "var(--line)" }}
         />
+        {tip ? (
+          <span className="text-[11px] text-slate-400 print:hidden" data-export="exclude">
+            {tip}
+          </span>
+        ) : null}
       </div>
       <div className="mt-3 text-sm text-slate-700">{children}</div>
     </section>
@@ -1805,6 +1812,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
               className={template.sectionSpacing}
               titleClassName={template.sectionTitleClass}
               lineClassName={template.sectionLineClass}
+              tip="建议在第二页展示"
             >
               <div className="grid grid-cols-3 gap-3">
                 {showcase.map((item, index) => (
