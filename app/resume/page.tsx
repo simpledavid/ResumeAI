@@ -511,7 +511,7 @@ const formatProjects = (values: Resume["projects"]) =>
     .join("\n\n");
 
 const resumeToText = (resume: Resume): TextSections => ({
-  skills: resume.skills.filter(Boolean).join(" • "),
+  skills: resume.skills.filter(Boolean).map((s) => `• ${s}`).join("\n"),
   experience: formatExperience(resume.experience),
   projects: formatProjects(resume.projects),
 });
@@ -957,7 +957,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
         ...basics,
         links: structuredResume.basics.links ?? [],
       },
-      skills: text.skills.split(/[•\n]/).map((s) => s.trim()).filter(Boolean),
+      skills: text.skills.split("\n").map((s) => s.replace(/^[•\s]+/, "").trim()).filter(Boolean),
       education: hasEducation
         ? [
             {
@@ -1256,14 +1256,6 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
     }, 1000);
   };
 
-  if (booting) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f1f3f5] text-slate-600">
-        正在加载...
-      </div>
-    );
-  }
-
   const isDark = pageTheme === "dark";
   const pageBg = isDark ? "#0a0a0a" : template.pageBg;
   const btnBase = isDark
@@ -1492,7 +1484,7 @@ export default function ResumeEditorPage({ publicUsername }: ResumeEditorPagePro
             <EditableBlock
               value={text.skills}
               onChange={(value) => updateText("skills", value)}
-              placeholder="例如：Python • React • 数据分析 • 产品设计"
+              placeholder="• Python&#10;• React&#10;• 数据分析"
               className="text-sm text-slate-700"
             />
           </Section>
